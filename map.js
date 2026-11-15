@@ -14,6 +14,8 @@ const ammo=cv(64,64,x=>{x.fillStyle='#4d6a35';x.fillRect(0,0,64,64);x.fillStyle=
 const asp=cv(128,128,x=>{x.fillStyle='#4a4c52';x.fillRect(0,0,128,128);for(let i=0;i<500;i++){const v=rnd()*40|0;x.fillStyle='rgb('+(60+v)+','+(62+v)+','+(68+v)+')';x.fillRect(rnd()*128,rnd()*128,2,2)}
 x.strokeStyle='rgba(15,15,20,.6)';x.beginPath();x.moveTo(rnd()*128,0);for(let i=1;i<6;i++)x.lineTo(rnd()*128,i*22);x.stroke()},26,26);
 const win=cv(64,64,x=>{x.fillStyle='#d6cfbd';x.fillRect(0,0,64,64);x.fillStyle='#46556b';for(let i=0;i<2;i++)for(let j=0;j<4;j++)x.fillRect(4+j*16,8+i*28,10,18);x.fillStyle='rgba(0,0,0,.15)';x.fillRect(0,60,64,4)},13);
+const barT=cv(64,32,x=>{x.fillStyle='#a3a8ae';x.fillRect(0,0,64,32);x.fillStyle='#e8c21a';for(let i=-2;i<6;i++){x.beginPath();x.moveTo(i*12,32);x.lineTo(i*12+8,32);x.lineTo(i*12+24,12);x.lineTo(i*12+16,12);x.fill()}for(let i=0;i<40;i++){x.fillStyle='rgba(0,0,0,'+rnd()*.15+')';x.fillRect(rnd()*64,rnd()*32,4,1)}});
+const brlT=cv(64,64,x=>{x.fillStyle='#b23a2b';x.fillRect(0,0,64,64);x.fillStyle='rgba(0,0,0,.35)';[8,30,52].forEach(y=>x.fillRect(0,y,64,4));for(let i=0;i<4;i++){x.fillStyle='rgba(255,255,255,.12)';x.fillRect(i*16+2,0,3,64)}});
 const sky=cv(8,256,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#4f7fc4');g.addColorStop(.45,'#9ab8dc');g.addColorStop(.52,'#f4c08e');g.addColorStop(1,'#d98f6a');x.fillStyle=g;x.fillRect(0,0,w,h)});
 sky.magFilter=sky.minFilter=THREE.LinearFilter;
 window.buildMap=(add,S,rng)=>{
@@ -22,12 +24,12 @@ fl.material.map=asp;fl.material.color.set(0xffffff);fl.material.needsUpdate=true
 S.add(new THREE.Mesh(new THREE.SphereGeometry(120,16,12),new THREE.MeshBasicMaterial({map:sky,side:THREE.BackSide,fog:false})));
 const lab=['BD 13','VECTO','BD 13','VECTO','BD 13'],base=[0x2f5f9e,0xa8302e,0x3f8a4f,0xd98a2b,0x2f5f9e].map((c,i)=>cont(c,lab[i])),mats={};
 const M=(i,n)=>mats[i+'_'+n]||(mats[i+'_'+n]=(t=>{t.repeat.set(3,n);t.needsUpdate=true;return new THREE.MeshLambertMaterial({map:t})})(base[i].clone()));
-const cm=new THREE.MeshLambertMaterial({map:crate}),am=new THREE.MeshLambertMaterial({map:ammo}),wm=new THREE.MeshLambertMaterial({map:win}),st=new THREE.MeshLambertMaterial({color:0x55627a});
+const bar=new THREE.MeshLambertMaterial({map:barT}),brl=new THREE.MeshLambertMaterial({map:brlT}),cm=new THREE.MeshLambertMaterial({map:crate}),am=new THREE.MeshLambertMaterial({map:ammo}),wm=new THREE.MeshLambertMaterial({map:win}),st=new THREE.MeshLambertMaterial({color:0x55627a});
 [[0,-49.9,0],[0,49.9,Math.PI],[-49.9,0,Math.PI/2],[49.9,0,-Math.PI/2]].forEach(a=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(100,8),wm);p.position.set(a[0],4,a[1]);p.rotation.y=a[2];S.add(p)});
-for(let gx=-3;gx<=3;gx++)for(let gz=-3;gz<=3;gz++){if(Math.abs(gx)<=1&&Math.abs(gz)<=1)continue;if(rng()<.3)continue;
+for(let gx=-3;gx<=3;gx++)for(let gz=-3;gz<=3;gz++){if(Math.abs(gx)<=1&&Math.abs(gz)<=1&&(gx===0||gz===0)){if(gx||gz){const x=gx*13,z=gz*13;add(x+2.5,z+2,3,1,.8,bar);add(x-2.5,z-2,2.2,2.2,2.2,cm);add(x+3,z-3,1.6,1.2,1.6,cm);add(x-3,z+3,.9,1.1,.9,brl);add(x-4,z+3.2,.9,1.1,.9,brl)}continue}if(rng()<.12)continue;
 const x=gx*13+(rng()-.5)*3,z=gz*13+(rng()-.5)*3,a=rng()<.5,n=1+(rng()*2.2|0),m=M(rng()*5|0,n);
 add(x,z,a?11:2.6,2.6*n,a?2.6:11,m);if(n===1&&rng()<.6)add(x+(a?0:3.2),z+(a?3.2:0),1.6,1.2,1.6,cm)}
-[[-5,4],[5,-4],[-4,-6],[6,5]].forEach(a=>add(a[0],a[1],3,1,.8,0x9aa0a6));
+[[-5,4],[5,-4],[-4,-6],[6,5]].forEach(a=>add(a[0],a[1],3,1,.8,bar));
 [[-4,-3],[7,2],[-8,6]].forEach(a=>{add(a[0],a[1],2.2,.6,1.4,am);add(a[0]+.2,a[1],1.6,1.1,1.1,am)});
 [[-9,-9],[9,9]].forEach(a=>{add(a[0],a[1],.5,12,.5,0x2c2f35);const l=new THREE.Mesh(new THREE.BoxGeometry(2.2,.4,1),new THREE.MeshBasicMaterial({color:0xfff1c4}));l.position.set(a[0],12.2,a[1]);S.add(l)});
 [[-46,-46],[46,-46],[-46,46],[46,46]].forEach(a=>add(a[0],a[1],1.6,14,1.6,st));

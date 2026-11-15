@@ -12,11 +12,11 @@ mossberg:{n:'Mossberg',s:0,dmg:14,pel:8,rate:800,mag:8,res:32,rl:2600,auto:0,spr
 mp5:{n:'MP5',s:0,dmg:17,rate:70,mag:30,res:120,rl:1800,auto:1,spr:.025,f:340,p:[[.065,.09,.4,0,0,0,D],[.03,.03,.25,0,.01,-.3,M],[.04,.25,.06,0,-.16,-.1,D],[.04,.12,.05,0,-.1,.12,D],[.04,.07,.25,0,0,.3,M],[.07,.06,.2,0,-.02,-.2,D]]},
 scar:{n:'SCAR',s:0,dmg:24,rate:85,mag:20,res:100,rl:2000,auto:1,spr:.01,f:230,p:[[.07,.1,.5,0,0,0,Tn],[.03,.03,.4,0,.015,-.42,D],[.07,.07,.3,0,0,-.28,Tn],[.055,.12,.28,0,-.03,.38,Tn],[.045,.16,.07,0,-.12,0,D],[.04,.12,.05,0,-.1,.17,D],[.04,.05,.12,0,.08,-.03,D]]},
 glock:{n:'Glock',s:1,dmg:20,rate:220,mag:15,res:60,rl:1400,auto:0,spr:.008,f:400,p:[[.04,.06,.3,0,.03,-.05,D],[.045,.03,.25,0,-.02,-.05,M],[.04,.14,.07,0,-.07,.07,M]]},
-knife:{n:'Knife',s:2,dmg:55,rate:450,mag:0,res:0,rl:0,auto:0,spr:0,range:2.8,f:90,p:[[.015,.05,.35,0,0,-.3,0xc9ced6],[.03,.04,.14,0,0,-.05,D],[.05,.06,.02,0,0,-.13,M]]}
+knife:{n:'Knife',s:2,dmg:55,rate:450,mag:0,res:0,rl:0,auto:0,spr:0,range:2.8,f:90,p:[[.012,.06,.32,0,.02,-.28,0xd5dbe3],[.016,.012,.3,0,.055,-.27,0x8a929c],[.04,.07,.015,0,0,-.11,D],[.03,.045,.14,0,-.01,-.03,0x1c1c1c]]}
 };
 for(const k in W)W[k].id=k;
-window.buildGun=(id,hand)=>{const g=new THREE.Group();W[id].p.forEach(a=>bx(g,...a));if(hand){bx(g,.1,.1,.14,0,-.075,-.3,Sk);bx(g,.09,.11,.1,0,-.12,.14,Sk);bx(g,.11,.11,.5,.07,-.2,.45,Sl);bx(g,.1,.1,.45,-.05,-.16,-.55,Sl)}return g};
-window.setGun=(g,id,s,hand)=>{while(g.children.length)g.remove(g.children[0]);const m=buildGun(id,hand);m.scale.setScalar(s||1);g.add(m)};
+window.buildGun=(id,hand)=>{const g=new THREE.Group();W[id].p.forEach(a=>bx(g,...a));if(hand){if(id==='knife'){bx(g,.07,.07,.1,0,-.012,-.03,Sk);bx(g,.09,.09,.45,.02,-.05,.25,Sl)}else{bx(g,.1,.1,.14,0,-.075,-.3,Sk);bx(g,.09,.11,.1,0,-.12,.14,Sk);bx(g,.11,.11,.5,.07,-.2,.45,Sl);bx(g,.1,.1,.45,-.05,-.16,-.55,Sl)}}return g};
+window.setGun=(g,id,s,hand)=>{while(g.children.length)g.remove(g.children[0]);const m=buildGun(id,hand);m.scale.setScalar(s||1);if(id==='knife'&&hand){m.rotation.x=.5;m.position.set(.05,-.02,-.05)}g.add(m)};
 window.makeSoldier=col=>{const g=new THREE.Group(),P=0x3a3f33,V=0x2d3036;
 bx(g,.22,.72,.26,-.14,.36,0,P);bx(g,.22,.72,.26,.14,.36,0,P);bx(g,.25,.12,.34,-.14,.06,-.03,D);bx(g,.25,.12,.34,.14,.06,-.03,D);
 bx(g,.56,.62,.3,0,1.02,0,col);bx(g,.5,.42,.35,0,1.06,0,V);bx(g,.14,.55,.14,-.36,1.0,0,col);bx(g,.14,.14,.5,.3,1.08,-.22,col);
