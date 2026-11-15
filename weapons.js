@@ -1,9 +1,12 @@
 (()=>{
-const M=0x2a2d33,D=0x15171b,Wd=0x8b4a1f,Gr=0x3d7a4d,Tn=0xb98a52,Sk=0xd89c6c;
-const bx=(g,w,h,d,x,y,z,c)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
+const M=0x4d5c9a,D=0x2b2f45,Wd=0xb5622a,Gr=0x3d7a4d,Tn=0xb98a52,Sk=0xd08a4e,Sl=0xa05f2c;
+const tx=f=>{const c=document.createElement('canvas');c.width=c.height=64;f(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;return t};
+const metal=tx(x=>{x.fillStyle='#e4e4ec';x.fillRect(0,0,64,64);for(let i=0;i<260;i++){x.fillStyle='rgba(0,0,0,'+Math.random()*.2+')';x.fillRect(Math.random()*64,Math.random()*64,1+Math.random()*7,1)}for(let i=0;i<24;i++){x.fillStyle='rgba(255,255,255,.3)';x.fillRect(Math.random()*64,Math.random()*64,7,1)}});
+const wood=tx(x=>{x.fillStyle='#fff';x.fillRect(0,0,64,64);for(let i=0;i<44;i++){x.fillStyle='rgba(60,25,5,'+(.1+Math.random()*.28)+')';x.fillRect(0,Math.random()*64,64,1)}});
+const bx=(g,w,h,d,x,y,z,c)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c,map:c===Wd?wood:metal}));m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
 // s: slot (0 primary, 1 pistol, 2 melee). p: parts [w,h,d,x,y,z,color]
 window.W={
-akm:{n:'AKM',s:0,dmg:28,rate:100,mag:30,res:90,rl:2200,auto:1,spr:.012,f:260,p:[[.07,.09,.4,0,0,0,M],[.03,.03,.45,0,.01,-.42,D],[.065,.07,.28,0,-.005,-.28,Wd],[.05,.1,.28,0,-.03,.34,Wd],[.05,.2,.08,0,-.14,-.05,M],[.04,.12,.05,0,-.1,.14,Wd],[.02,.04,.02,0,.07,-.5,D]]},
+akm:{n:'AKM',s:0,dmg:28,rate:100,mag:30,res:90,rl:2200,auto:1,spr:.012,f:260,p:[[.07,.09,.4,0,0,0,M],[.03,.03,.45,0,.01,-.42,D],[.065,.07,.28,0,-.005,-.28,Wd],[.05,.1,.28,0,-.03,.34,Wd],[.05,.2,.08,0,-.14,-.05,M],[.04,.12,.05,0,-.1,.14,Wd],[.02,.04,.02,0,.07,-.5,D],[.03,.03,.3,0,.055,-.3,M]]},
 awm:{n:'AWM',s:0,dmg:110,rate:1300,mag:5,res:20,rl:2800,auto:0,spr:0,f:150,zoom:3.5,p:[[.07,.1,.7,0,0,.05,Gr],[.035,.035,.7,0,.02,-.65,D],[.06,.14,.3,0,-.02,.5,Gr],[.06,.06,.3,0,.12,-.05,D],[.04,.07,.1,0,-.08,0,M],[.03,.03,.1,.06,.03,.1,M]]},
 mossberg:{n:'Mossberg',s:0,dmg:14,pel:8,rate:800,mag:8,res:32,rl:2600,auto:0,spr:.07,range:40,f:110,p:[[.06,.08,.5,0,0,.05,D],[.04,.04,.7,0,.02,-.45,D],[.03,.03,.6,0,-.04,-.38,M],[.07,.06,.2,0,-.05,-.3,Wd],[.05,.1,.3,0,-.04,.45,D]]},
 mp5:{n:'MP5',s:0,dmg:17,rate:70,mag:30,res:120,rl:1800,auto:1,spr:.025,f:340,p:[[.065,.09,.4,0,0,0,D],[.03,.03,.25,0,.01,-.3,M],[.04,.25,.06,0,-.16,-.1,D],[.04,.12,.05,0,-.1,.12,D],[.04,.07,.25,0,0,.3,M],[.07,.06,.2,0,-.02,-.2,D]]},
@@ -12,7 +15,7 @@ glock:{n:'Glock',s:1,dmg:20,rate:220,mag:15,res:60,rl:1400,auto:0,spr:.008,f:400
 knife:{n:'Knife',s:2,dmg:55,rate:450,mag:0,res:0,rl:0,auto:0,spr:0,range:2.8,f:90,p:[[.015,.05,.35,0,0,-.3,0xc9ced6],[.03,.04,.14,0,0,-.05,D],[.05,.06,.02,0,0,-.13,M]]}
 };
 for(const k in W)W[k].id=k;
-window.buildGun=(id,hand)=>{const g=new THREE.Group();W[id].p.forEach(a=>bx(g,...a));if(hand){bx(g,.08,.08,.34,0,-.1,-.12,Sk);bx(g,.07,.07,.2,0,-.07,.16,Sk)}return g};
+window.buildGun=(id,hand)=>{const g=new THREE.Group();W[id].p.forEach(a=>bx(g,...a));if(hand){bx(g,.1,.1,.14,0,-.075,-.3,Sk);bx(g,.09,.11,.1,0,-.12,.14,Sk);bx(g,.11,.11,.5,.07,-.2,.45,Sl);bx(g,.1,.1,.45,-.05,-.16,-.55,Sl)}return g};
 window.setGun=(g,id,s,hand)=>{while(g.children.length)g.remove(g.children[0]);const m=buildGun(id,hand);m.scale.setScalar(s||1);g.add(m)};
 window.makeSoldier=col=>{const g=new THREE.Group(),P=0x3a3f33,V=0x2d3036;
 bx(g,.22,.72,.26,-.14,.36,0,P);bx(g,.22,.72,.26,.14,.36,0,P);bx(g,.25,.12,.34,-.14,.06,-.03,D);bx(g,.25,.12,.34,.14,.06,-.03,D);

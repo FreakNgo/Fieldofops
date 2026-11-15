@@ -7,10 +7,10 @@ const st=t=>$('#status').textContent=t;
 
 // ---------- scene ----------
 const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(innerWidth,innerHeight);R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(R.domElement);
-const S=new THREE.Scene();S.background=new THREE.Color(0x9fb6cf);S.fog=new THREE.Fog(0x9fb6cf,35,130);
+const S=new THREE.Scene();S.background=new THREE.Color(0xbfa58f);S.fog=new THREE.Fog(0xc4ab98,40,150);
 const C=new THREE.PerspectiveCamera(80,innerWidth/innerHeight,.1,200);S.add(C);
-S.add(new THREE.HemisphereLight(0xffffff,0x4a5a66,.95));
-const sun=new THREE.DirectionalLight(0xffffff,.6);sun.position.set(30,60,20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-65,right:65,top:65,bottom:-65,far:160});sun.shadow.bias=-.0004;S.add(sun);
+S.add(new THREE.HemisphereLight(0xbcd0ff,0x6b5a4a,.9));
+const sun=new THREE.DirectionalLight(0xffd9a8,.9);sun.position.set(-40,45,25);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-65,right:65,top:65,bottom:-65,far:160});sun.shadow.bias=-.0004;S.add(sun);
 const fl=new THREE.Mesh(new THREE.PlaneGeometry(104,104),new THREE.MeshLambertMaterial({color:0x4b4e54}));fl.rotation.x=-Q;fl.receiveShadow=true;S.add(fl);
 const gr=new THREE.GridHelper(104,52,0x000000,0x000000);gr.material.transparent=true;gr.material.opacity=.14;gr.position.y=.01;S.add(gr);
 const rng=(a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296})(7);
@@ -18,7 +18,7 @@ const B=[],bm=[];
 const addB=(x,z,w,h,d,c)=>{B.push({x,z,w,h,d});const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),(typeof c==='object'?c:new THREE.MeshLambertMaterial({color:c})));m.position.set(x,h/2,z);m.castShadow=m.receiveShadow=true;S.add(m);bm.push(m)};
 [[0,-51,104,8,2],[0,51,104,8,2],[-51,0,2,8,104],[51,0,2,8,104]].forEach(a=>addB(a[0],a[1],a[2],a[3],a[4],0xcfc6b0));
 buildMap(addB,S,rng);
-const gun=new THREE.Group();gun.position.set(.3,-.28,-.65);C.add(gun);
+const gun=new THREE.Group();gun.position.set(.34,-.3,-.65);gun.rotation.y=.12;C.add(gun);
 
 // ---------- state ----------
 const me={x:0,y:0,z:0,vy:0,w:0,p:0,hp:100,k:0,d:0,g:true,dead:false,n:'Player'};
