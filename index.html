@@ -4,59 +4,84 @@
 <title>Vortex Strike – Multiplayer Arena Shooter</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:#0a0e1a;color:#fff;font-family:"Trebuchet MS","Segoe UI",sans-serif;user-select:none}
+html,body{height:100%;overflow:hidden;background:#0a0e1a;color:#fff;font-family:"Arial Narrow","Trebuchet MS",sans-serif;user-select:none}
 canvas{display:block;position:fixed;inset:0}
-.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;background:linear-gradient(160deg,rgba(8,14,34,.82),rgba(8,14,34,.55))}
-.card{width:min(400px,92vw);padding:34px 32px;border-radius:10px;background:rgba(14,20,42,.88);border:1px solid #2d3b6b;box-shadow:0 24px 70px rgba(0,0,0,.55);text-align:center}
-h1{font-size:44px;line-height:1;font-weight:900;letter-spacing:1px;font-style:italic;color:#ffd24a;text-shadow:3px 3px 0 #e8442e}
-.sub{margin:10px 0 24px;color:#9fb0e0;font-size:14px}
-input{width:100%;padding:13px 14px;border-radius:6px;border:1px solid #34457d;background:#0a1128;color:#fff;font-size:16px;outline:none;margin-bottom:12px}
-input:focus,button:focus-visible{border-color:#ffd24a;box-shadow:0 0 0 2px rgba(255,210,74,.35)}
-button{width:100%;padding:14px;border:0;border-radius:6px;background:#ffd24a;color:#1a1200;font-size:18px;font-weight:800;cursor:pointer;transition:transform .12s,background .12s}
-button:hover:not(:disabled){background:#ffe07a;transform:translateY(-2px)}
-button:disabled{opacity:.55;cursor:wait}
-button.alt{background:transparent;color:#9fb0e0;border:1px solid #34457d;margin-top:10px;font-size:14px;font-weight:600}
-#status{min-height:20px;margin-top:14px;color:#7fe0ff;font-size:14px}
-.keys{margin-top:18px;color:#7384b8;font-size:12px;line-height:1.7}
-#hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:2}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;background:rgba(8,14,34,.7)}
+.card{width:min(380px,92vw);padding:30px;border-radius:8px;background:rgba(14,20,42,.92);border:1px solid #2d3b6b;text-align:center}
+h1{font-size:40px;line-height:1;font-weight:900;font-style:italic;color:#ffd24a;text-shadow:3px 3px 0 #e8442e}
+.sub{margin:10px 0 20px;color:#9fb0e0;font-size:14px}
+button{width:100%;padding:14px;border:0;background:#2bb5cf;color:#fff;font:italic 900 22px "Arial Narrow",sans-serif;cursor:pointer;transition:filter .12s,transform .12s}
+button:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-2px)}
+button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus{outline:2px solid #ffd24a}
+button.alt{background:transparent;border:1px solid #34457d;color:#9fb0e0;margin-top:10px;font-size:15px}
+#menu{background:linear-gradient(90deg,rgba(6,10,24,.55),transparent 55%,rgba(6,10,24,.5));justify-content:flex-start;align-items:stretch}
+#logo{position:absolute;left:28px;top:22px}
+#name{position:absolute;left:50%;top:22px;transform:translateX(-50%);width:230px;padding:10px;text-align:center;background:rgba(0,0,0,.45);border:1px solid #3a4a7c;color:#fff;font:700 16px "Trebuchet MS",sans-serif}
+#side{position:absolute;right:0;bottom:26px;width:min(330px,70vw)}
+#status{min-height:20px;margin:0 20px 8px;text-align:right;color:#8fe6ff;font:600 14px "Trebuchet MS",sans-serif}
+#lbtn{background:#0b0e14;font-size:18px;margin-bottom:8px;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%)}
+#find{font-size:64px;padding:8px 0 12px;background:linear-gradient(#35c6e0,#1597b4);clip-path:polygon(34px 0,100% 0,100% 100%,0 100%);text-shadow:0 3px 0 rgba(0,0,0,.3)}
+#lo{display:none;background:rgba(10,16,34,.96);gap:22px;padding:34px 40px;align-items:stretch}
+#lslots{width:230px;display:flex;flex-direction:column;gap:12px}
+.ls,.gc{position:relative;background:#18223f;border:2px solid transparent;cursor:pointer;padding:8px}
+.ls.on,.gc.on{border-color:#35d4ee}.gc:hover{background:#223058}
+.ls small{font:700 13px sans-serif}.ls img,.gc img{width:100%;display:block}
+.gc b{position:absolute;left:10px;top:8px;font-size:16px}
+.gc i{display:block;height:5px;background:#ffd24a;margin-top:4px}
+#lright{flex:1;display:flex;flex-direction:column;min-width:0}
+#grid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;align-content:start}
+#lok{background:#2cb862;margin-top:14px;width:260px;align-self:flex-start;font-size:20px}
+#hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:2;font-weight:700}
 #cx{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%)}
 #cx:before,#cx:after{content:"";position:absolute;background:#fff;box-shadow:0 0 3px #000}
 #cx:before{left:10px;top:0;width:2px;height:22px}#cx:after{top:10px;left:0;height:2px;width:22px}
-#cx.hit:before,#cx.hit:after{background:#ff3b3b}
-#cx i{position:absolute;inset:7px;background:#0a0e1a}
-#hpw{position:absolute;left:24px;bottom:24px;width:240px}
-#hpw small{display:block;margin-bottom:4px;font-weight:700;text-shadow:0 1px 3px #000}
-#hpb{height:16px;background:rgba(0,0,0,.5);border:2px solid #fff;border-radius:3px;overflow:hidden}
-#hpb b{display:block;height:100%;width:100%;background:#42e08a;transition:width .15s}
-#board{position:absolute;right:16px;top:16px;min-width:190px;padding:8px 10px;background:rgba(0,0,0,.45);border-radius:6px;font-size:13px}
-#board div{display:flex;justify-content:space-between;gap:16px;padding:2px 0}
-#board h4{font-size:11px;color:#9fb0e0;margin-bottom:4px;font-weight:600}
-#feed{position:absolute;left:16px;top:16px;font-size:14px;text-shadow:0 1px 3px #000}
-#feed div{margin-bottom:4px;padding:3px 8px;background:rgba(0,0,0,.4);border-radius:4px;width:fit-content}
+#cx.hit:before,#cx.hit:after{background:#ff3b3b}#cx i{position:absolute;inset:7px;background:rgba(0,0,0,.01)}
+#top{position:absolute;left:50%;top:10px;transform:translateX(-50%);display:flex;gap:6px;align-items:center}
+#top div{padding:6px 18px;background:rgba(20,28,52,.78);border:1px solid #4a5a8c;clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,10px 100%,0 50%);font-size:20px}
+#top small{font-size:11px;color:#9fb0e0;margin:0 8px}
+#hpw{position:absolute;left:24px;bottom:22px;width:250px;font-size:24px}
+#hpw span{color:#ff4a5a;margin-right:6px}#hpw small{font-size:14px;color:#cbd5f5}
+#hpb{height:12px;margin-top:6px;background:rgba(0,0,0,.45);position:relative}
+#hpb b{display:block;height:100%;width:100%;background:#fff;transition:width .15s}
+#hpb:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 46px,rgba(0,0,0,.7) 46px 50px)}
+#ammo{position:absolute;right:26px;bottom:20px;text-align:right}
+#am{font-size:44px;font-style:italic;text-shadow:0 2px 4px #000}#am small{font-size:24px;color:#cbd5f5}
+#wn{font-size:16px;color:#ffd24a}
+#slots{position:absolute;right:24px;bottom:110px;display:flex;flex-direction:column;gap:6px;width:130px}
+.sl{padding:6px 10px;background:rgba(20,28,52,.65);border-left:4px solid transparent;font-size:14px}.sl.on{border-color:#35d4ee;background:rgba(40,70,110,.85)}
+#board{position:absolute;right:16px;top:16px;min-width:190px;padding:8px 10px;background:rgba(0,0,0,.45);font-size:13px}
+#board div{display:flex;justify-content:space-between;gap:16px;padding:2px 0}#board h4{font-size:11px;color:#9fb0e0;margin-bottom:4px}
+#feed{position:absolute;left:14px;top:14px;font-size:15px;color:#ffc83a;text-shadow:0 1px 3px #000}
+#feed div{margin-bottom:4px;padding:3px 8px;background:rgba(0,0,0,.4);width:fit-content}
 #dmg{position:absolute;inset:0;background:radial-gradient(transparent 40%,rgba(255,0,0,.65));opacity:0;transition:opacity .25s}
-#death{display:none;position:absolute;left:0;right:0;top:36%;text-align:center;font-size:40px;font-weight:900;font-style:italic;color:#ff5a45;text-shadow:3px 3px 0 #000}
+#scope{display:none;position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 28vh,#000 28.3vh)}
+#scope:before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#000}#scope:after{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:#000}
+#death{display:none;position:absolute;left:0;right:0;top:36%;text-align:center;font-size:44px;font-weight:900;font-style:italic;color:#ff5a45;text-shadow:3px 3px 0 #000}
 #pause{display:none}
 </style></head><body>
-<div id="menu" class="ov"><div class="card">
-<h1>VORTEX STRIKE</h1>
-<p class="sub">Fast 3D arena shooter. Up to 6 players, peer-to-peer.</p>
+<div id="menu" class="ov">
+<h1 id="logo">VORTEX STRIKE</h1>
 <input id="name" maxlength="14" placeholder="Nickname" autocomplete="off">
-<button id="find">Find match</button>
-<div id="status"></div>
-<div class="keys">WASD move &nbsp; Space jump &nbsp; Shift sprint<br>Mouse aim &nbsp; Click shoot</div>
-</div></div>
+<div id="side"><div id="status"></div><button id="lbtn">SELECT LOADOUT</button><button id="find">PLAY</button></div>
+</div>
+<div id="lo" class="ov"><div id="lslots"></div><div id="lright"><h1 style="font-size:26px;margin-bottom:14px;text-shadow:none;color:#fff">SELECT WEAPON</h1><div id="grid"></div><button id="lok">USE LOADOUT</button></div></div>
 <div id="pause" class="ov"><div class="card">
 <h1>READY?</h1><p class="sub" id="room"></p>
-<button id="play">Click to play</button>
+<button id="play">CLICK TO PLAY</button>
 <button id="leave" class="alt">Leave match</button>
 </div></div>
 <div id="hud">
-<div id="cx"><i></i></div><div id="feed"></div><div id="board"></div>
-<div id="hpw"><small id="hpt">100</small><div id="hpb"><b></b></div></div>
+<div id="scope"></div><div id="cx"><i></i></div><div id="feed"></div><div id="board"></div>
+<div id="top"><div><small>KILLED</small><span id="kl">0</span></div><div id="tm">00:00</div><div><span>30</span><small>TARGET</small></div></div>
+<div id="hpw"><span>♥</span><b id="hpt">100</b> <small>/ 100</small><div id="hpb"><b></b></div></div>
+<div id="slots"><div class="sl"></div><div class="sl"></div><div class="sl"></div></div>
+<div id="ammo"><div id="wn"></div><div id="am"></div></div>
 <div id="dmg"></div><div id="death">ELIMINATED</div>
 </div>
 <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
 <script src="libs/three.min.js"></script>
 <script src="libs/peerjs.min.js"></script>
+<script src="weapons.js"></script>
+<script src="map.js"></script>
 <script src="game.js"></script>
 </body></html>
