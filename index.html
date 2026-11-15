@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fields Of Ops</title>
+<style>
+/* ---------- Base + menu (olive drab / signal orange field-manual look) ---------- */
+*{box-sizing:border-box;margin:0}
+body{overflow:hidden;background:#0b0e0a;color:#e6e9dc;font:15px/1.4 "Trebuchet MS","Segoe UI",sans-serif;user-select:none}
+canvas{display:block}
+#menu{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+ background:linear-gradient(rgba(14,18,10,.88),rgba(14,18,10,.96)),repeating-linear-gradient(45deg,#1b2214 0 14px,#161c10 14px 28px)}
+h1{font:900 clamp(38px,8vw,84px)/1 Impact,"Arial Narrow Bold",sans-serif;letter-spacing:.08em;color:#ff6a1a;text-transform:uppercase}
+h1 span{display:block;font-size:.36em;letter-spacing:.5em;color:#a9b58a}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+button,input{padding:12px 24px;border:2px solid #ff6a1a;background:#141a0e;color:#ff6a1a;font:700 15px inherit;font-family:inherit;cursor:pointer;border-radius:0}
+button:hover,button:focus-visible{background:#ff6a1a;color:#10140a;outline:none}
+input[type=text]{cursor:text;color:#e6e9dc;width:170px;text-align:center}
+label{color:#a9b58a;display:flex;gap:6px;align-items:center}
+#status{min-height:22px;color:#a9b58a}
+#lobbyBox{display:none;flex-direction:column;align-items:center;gap:12px}
+#codeBig{font:900 46px Impact,sans-serif;letter-spacing:.2em;color:#e6e9dc;border:2px dashed #a9b58a;padding:6px 22px}
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;display:none;pointer-events:none;z-index:5}
+#xh{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%)}
+#xh:before,#xh:after{content:"";position:absolute;background:#fff;box-shadow:0 0 2px #000}
+#xh:before{left:10px;top:0;width:2px;height:22px;-webkit-mask:linear-gradient(#000 35%,transparent 35% 65%,#000 65%);mask:linear-gradient(#000 35%,transparent 35% 65%,#000 65%)}
+#xh:after{top:10px;left:0;height:2px;width:22px;-webkit-mask:linear-gradient(90deg,#000 35%,transparent 35% 65%,#000 65%);mask:linear-gradient(90deg,#000 35%,transparent 35% 65%,#000 65%)}
+#xh.hit:before,#xh.hit:after{background:#ff3030}
+#stats{position:absolute;left:24px;bottom:22px;width:260px}
+#hpbar{height:14px;border:2px solid #e6e9dc;background:#0007}
+#hpfill{display:block;height:100%;width:100%;background:#7bd34a;transition:width .15s}
+#hptxt{font:900 30px Impact,sans-serif}
+#ammo{position:absolute;right:24px;bottom:22px;font:900 44px Impact,sans-serif;text-shadow:0 2px 4px #000}
+#ammo small{font-size:20px;color:#a9b58a}
+#code{position:absolute;left:24px;top:18px;color:#a9b58a;text-shadow:0 1px 3px #000}
+#feed{position:absolute;right:24px;top:18px;text-align:right;text-shadow:0 1px 3px #000}
+#board{position:absolute;left:50%;top:18%;transform:translateX(-50%);min-width:380px;background:#0a0d08d9;border:2px solid #ff6a1a;border-collapse:collapse;display:none}
+#board td,#board th{padding:6px 16px;text-align:left}#board th{color:#ff6a1a}
+#dmg{position:absolute;inset:0;box-shadow:inset 0 0 140px 40px #e00;opacity:0;transition:opacity .5s}
+#dead{position:absolute;left:0;right:0;top:38%;text-align:center;font:900 54px Impact,sans-serif;color:#ff3030;display:none;text-shadow:0 2px 6px #000}
+#pause{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000a;font:900 30px Impact,sans-serif;pointer-events:auto;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="menu">
+  <h1>Fields Of Ops<span>tactical p2p arena</span></h1>
+  <div id="mainBtns" class="row">
+    <button id="btnCreate">Create lobby</button>
+    <label><input type="checkbox" id="chkPublic"> Public</label>
+  </div>
+  <div class="row">
+    <input id="inCode" type="text" maxlength="12" placeholder="Lobby code" autocomplete="off">
+    <button id="btnJoin">Join lobby</button>
+  </div>
+  <div id="lobbyBox">
+    <div>Share this code with your squad</div>
+    <div id="codeBig">----</div>
+    <button id="btnDeploy">Deploy</button>
+  </div>
+  <div id="status"></div>
+  <div style="color:#7d8767;font-size:13px">WASD move · Space jump · Shift sprint · Click fire · R reload · Tab scoreboard</div>
+</div>
+
+<div id="hud">
+  <div id="xh"></div><div id="code"></div><div id="feed"></div>
+  <div id="stats"><div id="hpbar"><i id="hpfill"></i></div><span id="hptxt">100</span></div>
+  <div id="ammo"></div>
+  <table id="board"></table>
+  <div id="dmg"></div><div id="dead">ELIMINATED<br><small>Redeploying…</small></div>
+  <div id="pause">Click to resume</div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+/* ======================================================================
+   CONFIG — replace GAME_ID with the ID you get from Poki for production.
+   ====================================================================== */
+const GAME_ID = '00000000-0000-0000-0000-000000000000'; // default test game ID
+const ARENA = 40;            // half-size of the arena
+const EYE = 1.65;            // eye height
+const MAG = 30, FIRE_DELAY = 0.11, RELOAD_TIME = 1.6;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ======================================================================
+   RENDERER / SCENE
+   ====================================================================== */
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xb7a98f);               // dusty warm sky
+scene.fog = new THREE.Fog(0xb7a98f, 25, 110);               // atmospheric haze
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.05, 300);
+camera.rotation.order = 'YXZ';
+scene.add(camera);                                           // camera added so the gun can be its child
+
+scene.add(new THREE.HemisphereLight(0xffe9c8, 0x3d3a30, 0.95));
+const sun = new THREE.DirectionalLight(0xffc98a, 1.2);
+sun.position.set(45, 60, 25);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 160 });
+scene.add(sun);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ======================================================================
+   PROCEDURAL TEXTURES (no external assets needed)
+   ====================================================================== */
+function makeTex(draw) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  draw(c.getContext('2d'));
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
+  t.magFilter = THREE.NearestFilter;
+  return t;
+}
+const speckle = (g, n) => { for (let i = 0; i < n; i++) { g.fillStyle = Math.random() < .5 ? 'rgba(0,0,0,.09)' : 'rgba(255,255,255,.07)'; g.fillRect(Math.random()*128, Math.random()*128, 3, 3); } };
+const TEX = {
+  concrete: makeTex(g => { g.fillStyle = '#8d8b84'; g.fillRect(0,0,128,128); speckle(g, 1500); g.strokeStyle = '#6f6d67'; g.strokeRect(0,0,128,128); }),
+  brick: makeTex(g => { g.fillStyle = '#c9bca4'; g.fillRect(0,0,128,128);
+    for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) { g.fillStyle = `hsl(${10+Math.random()*8},45%,${33+Math.random()*8}%)`; g.fillRect(c*32 + (r%2)*16 + 1, r*16 + 1, 30, 14); } }),
+  crate: makeTex(g => { g.fillStyle = '#9a7440'; g.fillRect(0,0,128,128); speckle(g, 600); g.strokeStyle = '#5a4222'; g.lineWidth = 8; g.strokeRect(4,4,120,120);
+    g.lineWidth = 5; g.beginPath(); g.moveTo(8,8); g.lineTo(120,120); g.moveTo(120,8); g.lineTo(8,120); g.stroke(); }),
+};
+
+/* ======================================================================
+   TACTICAL ARENA — deterministic layout so every peer sees the same map
+   ====================================================================== */
+const solids = [];            // meshes used for shot occlusion
+const boxes = [];             // THREE.Box3 colliders used for player collision
+function addBox(x, z, w, d, h, kind, y0 = 0) {
+  const tex = TEX[kind].clone(); tex.needsUpdate = true;
+  tex.repeat.set(Math.max(w, d) / 4, Math.max(h, 1) / 4);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ map: tex, roughness: .9 }));
+  m.position.set(x, y0 + h / 2, z); m.castShadow = m.receiveShadow = true;
+  scene.add(m); solids.push(m);
+  boxes.push(new THREE.Box3(new THREE.Vector3(x - w/2, y0, z - d/2), new THREE.Vector3(x + w/2, y0 + h, z + d/2)));
+}
+// Ground
+const gt = TEX.concrete.clone(); gt.needsUpdate = true; gt.repeat.set(30, 30);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2+20, ARENA*2+20), new THREE.MeshStandardMaterial({ map: gt, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground); solids.push(ground);
+// Perimeter walls
+addBox(0, -ARENA-.5, ARENA*2+2, 1, 6, 'concrete'); addBox(0, ARENA+.5, ARENA*2+2, 1, 6, 'concrete');
+addBox(-ARENA-.5, 0, 1, ARENA*2+2, 6, 'concrete'); addBox(ARENA+.5, 0, 1, ARENA*2+2, 6, 'concrete');
+// Brick buildings [x, z, width, depth, height]
+[[-20,-20,14,10,9],[22,-18,10,14,7],[-24,18,12,12,8],[20,22,16,8,10],[0,-2,7,7,4.5],[-4,28,8,3,3],[6,-32,12,3,5]]
+  .forEach(([x,z,w,d,h]) => addBox(x, z, w, d, h, 'brick'));
+// Cover crates (seeded RNG -> identical on all peers)
+const SPAWNS = [[-34,-34],[34,-34],[-34,34],[34,34],[0,-36],[0,36],[-36,0],[36,0]];
+let seed = 1337; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const probe = new THREE.Box3(), pv = new THREE.Vector3();
+for (let i = 0, made = 0; i < 400 && made < 34; i++) {
+  const x = (rnd()*2-1)*(ARENA-4), z = (rnd()*2-1)*(ARENA-4), s = 1.1 + rnd()*1.1;
+  probe.min.set(x-s/2-1, 0, z-s/2-1); probe.max.set(x+s/2+1, s, z+s/2+1);
+  if (boxes.some(b => b.intersectsBox(probe)) || SPAWNS.some(([sx,sz]) => Math.hypot(sx-x, sz-z) < 5)) continue;
+  addBox(x, z, s, s, s, 'crate'); made++;
+  if (s < 1.5 && rnd() < .4) addBox(x, z, s*.8, s*.8, s*.8, 'crate', s); // stacked crate
+}
+
+/* ======================================================================
+   LOCAL PLAYER STATE + FIRST-PERSON WEAPON
+   ====================================================================== */
+const me = { pos: new THREE.Vector3(), vy: 0, ground: true, hp: 100, alive: true, k: 0, d: 0,
+  name: 'Op-' + Math.random().toString(36).slice(2, 6), ammo: MAG, reloadAt: 0, nextShot: 0, fallbackId: 'L' + Math.random().toString(36).slice(2) };
+const keys = {};
+let firing = false, kick = 0, flashT = 0, playing = false;
+
+const controls = new PointerLockControls(camera, document.body);
+const gun = new THREE.Group();
+const gunMat = new THREE.MeshStandardMaterial({ color: 0x23262a, metalness: .6, roughness: .4 });
+const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1c, roughness: .8 });
+const part = (w, h, d, x, y, z, m = gunMat) => { const p = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); p.position.set(x, y, z); gun.add(p); return p; };
+part(.07, .1, .5, 0, 0, 0);            // receiver
+part(.035, .035, .32, 0, .015, -.4);   // barrel
+part(.05, .16, .07, 0, -.12, .02).rotation.x = .2;  // magazine
+part(.06, .12, .2, 0, -.03, .3, woodMat);           // stock
+part(.02, .03, .02, 0, .065, -.15);    // sight
+gun.position.set(.26, -.24, -.5);
+camera.add(gun);
+const flash = new THREE.Mesh(new THREE.PlaneGeometry(.28, .28), new THREE.MeshBasicMaterial({ color: 0xffc866, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+flash.position.set(0, .015, -.62); flash.visible = false; gun.add(flash);
+const flashLight = new THREE.PointLight(0xffaa44, 6, 12); flashLight.position.copy(flash.position); flashLight.visible = false; gun.add(flashLight);
+
+/* ======================================================================
+   REMOTE PLAYERS — low-poly operator models, positions interpolated
+   ====================================================================== */
+const peers = new Map();
+const mBody = new THREE.MeshStandardMaterial({ color: 0x4f6b3a }), mSkin = new THREE.MeshStandardMaterial({ color: 0xd2a07a }), mGun = gunMat;
+function addPeer(id) {
+  if (peers.has(id)) return peers.get(id);
+  const g = new THREE.Group();
+  const mk = (geo, mat, y, head) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; m.castShadow = true; m.userData = { peerId: id, head: !!head }; g.add(m); return m; };
+  mk(new THREE.BoxGeometry(.7, .75, .4), mBody, 1.0);                 // torso
+  mk(new THREE.BoxGeometry(.5, .6, .35), mBody, .3);                  // legs
+  const head = mk(new THREE.BoxGeometry(.32, .32, .32), mSkin, 1.55, true);
+  const rifle = mk(new THREE.BoxGeometry(.08, .1, .6), mGun, 1.1); rifle.position.set(.3, 1.1, -.35);
+  scene.add(g);
+  const p = { id, g, head, name: 'Op-' + String(id).slice(0, 4), k: 0, d: 0, tp: new THREE.Vector3(), ty: 0, seen: false, alive: true, last: performance.now() };
+  peers.set(id, p); feed(`${esc(p.name)} joined`); return p;
+}
+function removePeer(id) {
+  const p = peers.get(id); if (!p) return;
+  scene.remove(p.g); p.g.traverse(o => o.geometry && o.geometry.dispose());
+  peers.delete(id); feed(`${esc(p.name)} left`);
+}
+
+/* ======================================================================
+   NETWORKING — Poki Netlib (P2P). 'unreliable' = positions, 'reliable' = events
+   ====================================================================== */
+let net = null;
+const myId = () => (net && net.id) || me.fallbackId;
+function send(channel, obj) { if (!net) return; try { net.broadcast(channel, JSON.stringify(obj)); } catch (e) { /* channel not open yet */ } }
+
+// Netlib handler signature differs between versions: accept (peer, channel, data) OR (channel, peer, data)
+function onMessage(a, b, c) {
+  let peer = a, ch = b, data = c;
+  if (a === 'reliable' || a === 'unreliable') { ch = a; peer = b; }
+  const id = (peer && peer.id) || peer; if (!id || id === myId()) return;
+  let m; try {
+    if (typeof data !== 'string') data = new TextDecoder().decode(data);
+    m = JSON.parse(data);
+  } catch (e) { return; }
+  const p = addPeer(id); p.last = performance.now();
+  switch (m.t) {
+    case 'p': {                                           // position + rotation stream
+      p.tp.set(m.p[0], m.p[1], m.p[2]); p.ty = m.p[3];
+      if (!p.seen) { p.g.position.copy(p.tp); p.seen = true; }
+      break; }
+    case 'hello': p.name = String(m.name).slice(0, 16); p.k = m.k | 0; p.d = m.d | 0; break; // authoritative score from owner
+    case 'hit': if (m.to === myId() && me.alive) damage(m.dmg, id); break;
+    case 'kill': {                                        // sent by the victim
+      p.alive = false; p.g.visible = false; p.d++;
+      const killer = m.killer === myId() ? null : peers.get(m.killer);
+      if (m.killer === myId()) { me.k++; feed(`You eliminated <b>${esc(p.name)}</b>`); }
+      else { if (killer) killer.k++; feed(`${esc(killer ? killer.name : '?')} eliminated ${esc(p.name)}`); }
+      break; }
+    case 'spawn': p.alive = true; p.g.visible = true; p.seen = false; break;
+  }
+}
+
+async function connect(mode, code) {
+  setStatus('Connecting…');
+  let Network;
+  try { ({ Network } = await import('https://esm.sh/@poki/netlib')); }
+  catch (e) { setStatus('Could not load Netlib (check your connection).'); return; }
+  net = new Network(GAME_ID);
+  net.on('lobby', c => { $('codeBig').textContent = c; $('code').textContent = 'Lobby: ' + c;
+    $('mainBtns').parentElement.querySelectorAll('.row').forEach(r => r.style.display = 'none');
+    $('lobbyBox').style.display = 'flex'; setStatus(''); });
+  net.on('connected', peer => { addPeer((peer && peer.id) || peer); sendHello(); });
+  net.on('disconnected', peer => removePeer((peer && peer.id) || peer));
+  net.on('message', onMessage);
+  net.on('signalingerror', e => setStatus('Signaling error: ' + (e && e.message || e)));
+  let started = false;
+  const go = () => { if (started) return; started = true;
+    const r = mode === 'create' ? net.create({ public: $('chkPublic').checked, codeFormat: 'short' }) : net.join(code);
+    Promise.resolve(r).catch(e => setStatus('Lobby error: ' + (e && e.message || e))); };
+  net.on('ready', go); setTimeout(go, 2000);              // fallback if 'ready' already fired
+}
+const sendHello = () => send('reliable', { t: 'hello', name: me.name, k: me.k, d: me.d });
+
+/* ======================================================================
+   COMBAT
+   ====================================================================== */
+function shoot(now) {
+  me.ammo--; me.nextShot = now + FIRE_DELAY; kick = 1; flashT = .05; camera.rotation.x += .004;
+  const rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(0, 0), camera); rc.far = 200;
+  const targets = solids.slice(); peers.forEach(p => p.alive && targets.push(p.g));
+  const h = rc.intersectObjects(targets, true)[0];        // nearest hit: walls block shots
+  if (h && h.object.userData.peerId) {
+    const head = h.object.userData.head;
+    send('reliable', { t: 'hit', to: h.object.userData.peerId, dmg: head ? 50 : 20 });
+    $('xh').classList.add('hit'); setTimeout(() => $('xh').classList.remove('hit'), 120);
+  }
+  if (me.ammo <= 0) reload(now);
+}
+function reload(now) { if (me.reloadAt || me.ammo === MAG) return; me.reloadAt = now + RELOAD_TIME; }
+function damage(dmg, from) {
+  me.hp = Math.max(0, me.hp - dmg);
+  $('dmg').style.opacity = .8; setTimeout(() => $('dmg').style.opacity = 0, 80);
+  if (me.hp <= 0) die(from);
+}
+function die(killer) {
+  me.alive = false; me.d++; firing = false;
+  send('reliable', { t: 'kill', killer });
+  const k = peers.get(killer); if (k) feed(`${esc(k.name)} eliminated You`);
+  $('dead').style.display = 'block';
+  setTimeout(respawn, 3000);
+}
+function respawn() {
+  const [x, z] = SPAWNS[Math.floor(Math.random() * SPAWNS.length)];
+  me.pos.set(x, 0, z); me.vy = 0; me.hp = 100; me.ammo = MAG; me.reloadAt = 0; me.alive = true;
+  camera.rotation.y = Math.atan2(x, z);                   // face arena centre
+  $('dead').style.display = 'none';
+  send('reliable', { t: 'spawn' }); sendHello();
+}
+
+/* ======================================================================
+   PLAYER PHYSICS (axis-separated AABB collision, jumping onto crates)
+   ====================================================================== */
+const tb = new THREE.Box3();
+function hitBox(p) {
+  tb.min.set(p.x - .35, p.y + .02, p.z - .35); tb.max.set(p.x + .35, p.y + 1.8, p.z + .35);
+  for (const b of boxes) if (b.intersectsBox(tb)) return b;
+  return null;
+}
+function movePlayer(dt) {
+  const f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0), s = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+  const yaw = camera.rotation.y, sp = (keys.ShiftLeft ? 9 : 6) * dt;
+  let dx = -Math.sin(yaw) * f + Math.cos(yaw) * s, dz = -Math.cos(yaw) * f - Math.sin(yaw) * s;
+  const l = Math.hypot(dx, dz) || 1; dx = dx / l * sp; dz = dz / l * sp;
+  const p = me.pos;
+  p.x += dx; if (hitBox(p)) p.x -= dx;
+  p.z += dz; if (hitBox(p)) p.z -= dz;
+  if (keys.Space && me.ground) { me.vy = 7.5; me.ground = false; }
+  me.vy -= 22 * dt; p.y += me.vy * dt; me.ground = false;
+  const b = hitBox(p);
+  if (b) { if (me.vy < 0) { p.y = b.max.y; me.ground = true; } else p.y = b.min.y - 1.8; me.vy = 0; }
+  else if (p.y <= 0) { p.y = 0; me.vy = 0; me.ground = true; }
+  p.x = THREE.MathUtils.clamp(p.x, -ARENA + .5, ARENA - .5); p.z = THREE.MathUtils.clamp(p.z, -ARENA + .5, ARENA - .5);
+}
+
+/* ======================================================================
+   HUD HELPERS
+   ====================================================================== */
+function setStatus(t) { $('status').textContent = t; }
+function feed(html) {
+  const d = document.createElement('div'); d.innerHTML = html; $('feed').appendChild(d);
+  while ($('feed').children.length > 5) $('feed').firstChild.remove();
+  setTimeout(() => d.remove(), 5000);
+}
+function drawBoard() {
+  const rows = [{ name: me.name + ' (you)', k: me.k, d: me.d }, ...[...peers.values()]].sort((a, b) => b.k - a.k);
+  $('board').innerHTML = '<tr><th>Operator</th><th>Kills</th><th>Deaths</th></tr>' +
+    rows.map(r => `<tr><td>${esc(r.name)}</td><td>${r.k}</td><td>${r.d}</td></tr>`).join('');
+}
+
+/* ======================================================================
+   INPUT + MENU WIRING
+   ====================================================================== */
+addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'Tab') { e.preventDefault(); if (playing) { drawBoard(); $('board').style.display = 'table'; } }
+  if (e.code === 'KeyR' && playing && me.alive) reload(performance.now() / 1000);
+});
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'Tab') $('board').style.display = 'none'; });
+addEventListener('mousedown', e => { if (e.button === 0 && controls.isLocked) firing = true; });
+addEventListener('mouseup', e => { if (e.button === 0) firing = false; });
+$('pause').onclick = () => controls.lock();
+controls.addEventListener('lock', () => $('pause').style.display = 'none');
+controls.addEventListener('unlock', () => { firing = false; if (playing) $('pause').style.display = 'flex'; });
+
+$('btnCreate').onclick = () => connect('create');
+$('btnJoin').onclick = () => { const c = $('inCode').value.trim(); if (!c) return setStatus('Enter a lobby code first.'); connect('join', c); };
+$('btnDeploy').onclick = () => {
+  $('menu').style.display = 'none'; $('hud').style.display = 'block'; playing = true;
+  respawn(); controls.lock();
+};
+
+/* ======================================================================
+   MAIN LOOP
+   ====================================================================== */
+let last = performance.now(), netAcc = 0, helloAcc = 0, lastAmmoTxt = '';
+const lerpA = (a, b, t) => { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * t; };
+
+renderer.setAnimationLoop(() => {
+  const nowMs = performance.now(), dt = Math.min((nowMs - last) / 1000, .05), now = nowMs / 1000; last = nowMs;
+
+  if (playing) {
+    if (controls.isLocked && me.alive) {
+      movePlayer(dt);
+      if (me.reloadAt && now >= me.reloadAt) { me.ammo = MAG; me.reloadAt = 0; }
+      if (firing && !me.reloadAt && me.ammo > 0 && now >= me.nextShot) shoot(now);
+    }
+    camera.position.set(me.pos.x, me.pos.y + (me.alive ? EYE : .4), me.pos.z);
+
+    // Network tick: 20 Hz position stream (unreliable), 3 s heartbeat/score sync (reliable)
+    netAcc += dt; helloAcc += dt;
+    if (netAcc >= .05 && me.alive) { netAcc = 0;
+      const r = v => Math.round(v * 100) / 100;
+      send('unreliable', { t: 'p', p: [r(me.pos.x), r(me.pos.y), r(me.pos.z), r(camera.rotation.y), r(camera.rotation.x)] }); }
+    if (helloAcc >= 3) { helloAcc = 0; sendHello();
+      peers.forEach(p => { if (nowMs - p.last > 9000) removePeer(p.id); }); }          // drop silent peers
+    if ($('board').style.display === 'table') drawBoard();
+
+    // HUD
+    $('hpfill').style.width = me.hp + '%';
+    $('hpfill').style.background = me.hp > 50 ? '#7bd34a' : me.hp > 25 ? '#e8b030' : '#e03a2a';
+    $('hptxt').textContent = me.hp;
+    const at = me.reloadAt ? 'RELOADING' : `${me.ammo}<small> / ∞</small>`;
+    if (at !== lastAmmoTxt) { $('ammo').innerHTML = at; lastAmmoTxt = at; }
+  }
+
+  // Remote player interpolation (smooths out 20 Hz updates)
+  peers.forEach(p => { if (!p.seen) return;
+    p.g.position.lerp(p.tp, Math.min(1, dt * 14)); p.g.rotation.y = lerpA(p.g.rotation.y, p.ty, Math.min(1, dt * 14)); });
+
+  // Weapon recoil, reload dip and muzzle flash
+  kick = Math.max(0, kick - dt * 9);
+  gun.position.z = -.5 + kick * .07; gun.rotation.x = kick * .08 + (me.reloadAt ? -.6 : 0);
+  gun.position.y = -.24 - (me.reloadAt ? .08 : 0);
+  flashT -= dt; const on = flashT > 0;
+  flash.visible = flashLight.visible = on; if (on) flash.rotation.z = Math.random() * 6;
+  gun.visible = me.alive;
+
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
