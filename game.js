@@ -55,19 +55,20 @@ else if(d.t==='x')rm(d.id)}
 function die(by){me.dead=true;me.d++;me.hp=0;handle({t:'k',by,to:myId});send({t:'k',by,to:myId});$('#death').style.display='block';
 setTimeout(()=>{if(net){spawn();$('#death').style.display='none'}},2500)}
 
-const claim=id=>new Promise(r=>{let ok=false;const p=new Peer(id);p.on('open',()=>{ok=true;r(p)});p.on('error',()=>{if(!ok){p.destroy();r(null)}});setTimeout(()=>{if(!ok){p.destroy();r(null)}},8000)});
-const mkPeer=()=>new Promise(r=>{const p=new Peer();p.on('open',()=>r(p));p.on('error',()=>r(null));setTimeout(()=>r(null),8000)});
+const ICE={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
+const claim=id=>new Promise(r=>{let ok=false;const p=new Peer(id,ICE);p.on('open',()=>{ok=true;r(p)});p.on('error',()=>{if(!ok){p.destroy();r(null)}});setTimeout(()=>{if(!ok){p.destroy();r(null)}},8000)});
+const mkPeer=()=>new Promise(r=>{const p=new Peer(ICE);p.on('open',()=>r(p));p.on('error',()=>r(null));setTimeout(()=>r(null),8000)});
 const join=(p,id)=>new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v)}};
 const c=p.connect(id,{reliable:true});
 p.on('error',e=>{if(e.type==='peer-unavailable')fin(null)});
 c.on('data',d=>{if(d.t==='welcome')fin(c);else if(d.t==='full')fin(null);else recv(d)});
 c.on('error',()=>fin(null));c.on('close',()=>{fin(null);if(net&&net.hc===c)leave('Host disconnected.')});
-setTimeout(()=>fin(null),6000)});
+setTimeout(()=>fin(null),15000)});
 
 async function find(){let cl=null;
 for(let i=0;i<8;i++){const id=PFX+i;st('Searching rooms… ('+(i+1)+'/8)');
 const hp=await claim(id);
-if(hp){hp.on('connection',c=>{
+if(hp){hp.on('disconnected',()=>{try{hp.reconnect()}catch(e){}});hp.on('connection',c=>{
 c.on('open',()=>{if(!net)return;if(net.conns.length>=MAX-1){c.send({t:'full'});setTimeout(()=>c.close(),400);return}net.conns.push(c);c.send({t:'welcome'});feed('A player joined')});
 c.on('data',d=>recv(d,c));
 c.on('close',()=>{if(!net||!net.conns.includes(c))return;net.conns=net.conns.filter(x=>x!==c);rm(c.peer);net.conns.forEach(x=>x.open&&x.send({t:'x',id:c.peer}))})});

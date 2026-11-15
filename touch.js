@@ -20,6 +20,9 @@ const jt=jb.firstChild,JS=window.JS;
 const bind=(el,dn,up)=>{el.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();el.classList.add('on');dn&&dn()},{passive:false});['touchend','touchcancel'].forEach(t=>el.addEventListener(t,e=>{e.preventDefault();e.stopPropagation();el.classList.remove('on');up&&up()},{passive:false}))};
 const mk=(id,size,r,b,dn,up)=>{const e=document.createElement('div');e.className='tb';e.id=id;e.style.cssText='width:'+size+'px;height:'+size+'px;'+(r<0?'left:'+(-r)+'px;':'right:'+r+'px;')+(b<0?'top:'+(-b)+'px':'bottom:'+b+'px');e.innerHTML='<svg viewBox="0 0 24 24">'+ic[id]+'</svg>';bind(e,dn,up);root.appendChild(e)};
 mk('fire',104,28,64,()=>G.fire(true),()=>G.fire(false));
+{const fe=root.querySelector('#fire');let fp=[0,0];
+fe.addEventListener('touchstart',e=>{const t=e.changedTouches[0];fp=[t.clientX,t.clientY]},{passive:false});
+fe.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){G.look(t.clientX-fp[0],t.clientY-fp[1]);fp=[t.clientX,t.clientY]}},{passive:false})}
 mk('jump',72,150,34,()=>G.K.Space=true,()=>G.K.Space=false);
 mk('reload',60,166,122,()=>G.reload());
 mk('crouch',62,34,184,()=>G.K.KeyC=!G.K.KeyC);
