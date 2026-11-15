@@ -2,25 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Fields Of Ops</title>
 <style>
-/* ---------- Base + menu (olive drab / signal orange field-manual look) ---------- */
-*{box-sizing:border-box;margin:0}
-body{overflow:hidden;background:#0b0e0a;color:#e6e9dc;font:15px/1.4 "Trebuchet MS","Segoe UI",sans-serif;user-select:none}
+/* ---------- Base + menu (dark navy glass UI, electric-blue accent) ---------- */
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{overflow:hidden;background:#060b18;color:#e8efff;font:600 15px/1.4 system-ui,"Segoe UI",Roboto,sans-serif;user-select:none;touch-action:none}
 canvas{display:block}
-#menu{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
- background:linear-gradient(rgba(14,18,10,.88),rgba(14,18,10,.96)),repeating-linear-gradient(45deg,#1b2214 0 14px,#161c10 14px 28px)}
-h1{font:900 clamp(38px,8vw,84px)/1 Impact,"Arial Narrow Bold",sans-serif;letter-spacing:.08em;color:#ff6a1a;text-transform:uppercase}
-h1 span{display:block;font-size:.36em;letter-spacing:.5em;color:#a9b58a}
-.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
-button,input{padding:12px 24px;border:2px solid #ff6a1a;background:#141a0e;color:#ff6a1a;font:700 15px inherit;font-family:inherit;cursor:pointer;border-radius:0}
-button:hover,button:focus-visible{background:#ff6a1a;color:#10140a;outline:none}
-input[type=text]{cursor:text;color:#e6e9dc;width:170px;text-align:center}
-label{color:#a9b58a;display:flex;gap:6px;align-items:center}
-#status{min-height:22px;color:#a9b58a}
-#lobbyBox{display:none;flex-direction:column;align-items:center;gap:12px}
-#codeBig{font:900 46px Impact,sans-serif;letter-spacing:.2em;color:#e6e9dc;border:2px dashed #a9b58a;padding:6px 22px}
+#menu{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;
+ background:radial-gradient(ellipse at 50% 30%,rgba(30,70,160,.35),rgba(5,9,22,.88));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.card{width:min(100%,420px);display:flex;flex-direction:column;gap:12px;padding:26px;border-radius:20px;background:rgba(12,20,42,.78);
+ border:1px solid rgba(110,160,255,.25);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 40px rgba(47,123,255,.15)}
+h1{font:900 italic clamp(34px,9vw,48px)/1 system-ui,"Segoe UI",sans-serif;text-align:center;letter-spacing:-.02em;color:#fff;text-shadow:0 0 24px #2f7bff}
+h1 span{display:block;margin-top:6px;font:600 12px system-ui;letter-spacing:.35em;color:#7fa6ff;text-shadow:none;font-style:normal}
+.row{display:flex;gap:10px;align-items:center}
+button,input[type=text]{width:100%;padding:14px 18px;border-radius:12px;border:1px solid rgba(120,165,255,.3);background:rgba(255,255,255,.06);color:#e8efff;font:700 15px inherit;font-family:inherit;cursor:pointer;outline:none}
+input[type=text]{cursor:text;text-align:center;font-weight:600}
+input[type=text]:focus{border-color:#2f7bff;box-shadow:0 0 0 3px rgba(47,123,255,.25)}
+button:hover{background:rgba(255,255,255,.12)}
+button.pri{border:0;background:linear-gradient(180deg,#3d8bff,#1f5fe6);color:#fff;font-size:17px;box-shadow:0 6px 20px rgba(47,123,255,.45)}
+button.pri:hover{filter:brightness(1.12)}
+button:disabled{opacity:.5;pointer-events:none}
+label{display:flex;gap:8px;align-items:center;white-space:nowrap;color:#9db7f0;cursor:pointer}
+input[type=checkbox]{width:20px;height:20px;accent-color:#2f7bff}
+.or{text-align:center;color:#5d7bb8;font-size:12px}
+#status{min-height:20px;text-align:center;color:#8fb0ff;font-size:13px}
+#lobbyBox{display:none;flex-direction:column;gap:12px;text-align:center;color:#9db7f0}
+#codeBig{font:900 44px system-ui;letter-spacing:.18em;color:#fff;padding:8px;border-radius:12px;background:rgba(47,123,255,.15);border:1px dashed #3d8bff}
+.hint{text-align:center;color:#5d7bb8;font-size:12px}
+.touch .hint{display:none}
 /* ---------- HUD ---------- */
 #hud{position:fixed;inset:0;display:none;pointer-events:none;z-index:5}
 #xh{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%)}
@@ -40,27 +50,36 @@ label{color:#a9b58a;display:flex;gap:6px;align-items:center}
 #board td,#board th{padding:6px 16px;text-align:left}#board th{color:#ff6a1a}
 #dmg{position:absolute;inset:0;box-shadow:inset 0 0 140px 40px #e00;opacity:0;transition:opacity .5s}
 #dead{position:absolute;left:0;right:0;top:38%;text-align:center;font:900 54px Impact,sans-serif;color:#ff3030;display:none;text-shadow:0 2px 6px #000}
+#joy,.tb{display:none;position:absolute;pointer-events:auto;touch-action:none}
+.touch #joy{display:block;left:28px;bottom:80px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25)}
+#knob{position:absolute;left:41px;top:41px;width:48px;height:48px;border-radius:50%;background:rgba(61,139,255,.7)}
+.touch .tb{display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35);font:800 13px system-ui;color:#fff}
+.touch #bFire{right:28px;bottom:90px;width:92px;height:92px;background:rgba(255,70,50,.45)}
+.touch #bJump{right:136px;bottom:60px;width:64px;height:64px}
+.touch #bReload{right:136px;bottom:140px;width:52px;height:52px}
+.touch #bBoard{right:20px;top:64px;width:46px;height:46px;font-size:11px}
+.touch #ammo{right:auto;left:50%;transform:translateX(-50%);bottom:auto;top:12px;font-size:30px}
+.touch #stats{left:28px;bottom:20px;width:150px}
+.touch #feed{top:10px;font-size:12px}
 #pause{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000a;font:900 30px Impact,sans-serif;pointer-events:auto;cursor:pointer}
 </style>
 </head>
 <body>
 <div id="menu">
-  <h1>Fields Of Ops<span>tactical p2p arena</span></h1>
-  <div id="mainBtns" class="row">
-    <button id="btnCreate">Create lobby</button>
-    <label><input type="checkbox" id="chkPublic"> Public</label>
+  <div class="card">
+    <h1>FIELDS OF OPS<span>MULTIPLAYER FPS</span></h1>
+    <div id="mainForm" style="display:flex;flex-direction:column;gap:12px">
+      <input id="inName" type="text" maxlength="14" placeholder="Nickname" autocomplete="off">
+      <div class="row"><button id="btnCreate" class="pri">Create lobby</button>
+        <label><input type="checkbox" id="chkPublic"> Public</label></div>
+      <div class="or">or join a friend</div>
+      <div class="row"><input id="inCode" type="text" maxlength="12" placeholder="Lobby code" autocomplete="off"><button id="btnJoin" style="width:auto">Join</button></div>
+      <button id="btnSolo">Explore map (offline)</button>
+    </div>
+    <div id="lobbyBox"><div>Share this code with your squad</div><div id="codeBig">----</div><button id="btnDeploy" class="pri">Deploy</button></div>
+    <div id="status"></div>
+    <div class="hint">WASD move · Space jump · Shift sprint · Click fire · R reload · Tab scoreboard</div>
   </div>
-  <div class="row">
-    <input id="inCode" type="text" maxlength="12" placeholder="Lobby code" autocomplete="off">
-    <button id="btnJoin">Join lobby</button>
-  </div>
-  <div id="lobbyBox">
-    <div>Share this code with your squad</div>
-    <div id="codeBig">----</div>
-    <button id="btnDeploy">Deploy</button>
-  </div>
-  <div id="status"></div>
-  <div style="color:#7d8767;font-size:13px">WASD move · Space jump · Shift sprint · Click fire · R reload · Tab scoreboard</div>
 </div>
 
 <div id="hud">
@@ -70,6 +89,7 @@ label{color:#a9b58a;display:flex;gap:6px;align-items:center}
   <table id="board"></table>
   <div id="dmg"></div><div id="dead">ELIMINATED<br><small>Redeploying…</small></div>
   <div id="pause">Click to resume</div>
+  <div id="joy"><i id="knob"></i></div><div id="bFire" class="tb">FIRE</div><div id="bJump" class="tb">JUMP</div><div id="bReload" class="tb">R</div><div id="bBoard" class="tb">TAB</div>
 </div>
 
 <script type="importmap">
@@ -84,7 +104,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 /* ======================================================================
    CONFIG — replace GAME_ID with the ID you get from Poki for production.
    ====================================================================== */
-const GAME_ID = '00000000-0000-0000-0000-000000000000'; // default test game ID
+const GAME_ID = '6f1c2b7e-3a9d-4e58-9b41-d2a7c05e8f13'; // any random UUID works; swap for your Poki game ID in production
 const ARENA = 40;            // half-size of the arena
 const EYE = 1.65;            // eye height
 const MAG = 30, FIRE_DELAY = 0.11, RELOAD_TIME = 1.6;
@@ -256,24 +276,26 @@ function onMessage(a, b, c) {
   }
 }
 
+const netlibP = import('https://esm.sh/@poki/netlib').catch(() => null);   // start downloading Netlib at page load
+function fail(msg) { setStatus(msg); $('btnCreate').disabled = $('btnJoin').disabled = false; net = null; }
 async function connect(mode, code) {
-  setStatus('Connecting…');
-  let Network;
-  try { ({ Network } = await import('https://esm.sh/@poki/netlib')); }
-  catch (e) { setStatus('Could not load Netlib (check your connection).'); return; }
-  net = new Network(GAME_ID);
-  net.on('lobby', c => { $('codeBig').textContent = c; $('code').textContent = 'Lobby: ' + c;
-    $('mainBtns').parentElement.querySelectorAll('.row').forEach(r => r.style.display = 'none');
-    $('lobbyBox').style.display = 'flex'; setStatus(''); });
-  net.on('connected', peer => { addPeer((peer && peer.id) || peer); sendHello(); });
-  net.on('disconnected', peer => removePeer((peer && peer.id) || peer));
+  me.name = ($('inName').value.trim() || me.name).slice(0, 14);
+  setStatus('Connecting…'); $('btnCreate').disabled = $('btnJoin').disabled = true;
+  const lib = await Promise.race([netlibP, new Promise(r => setTimeout(() => r(null), 8000))]);
+  if (!lib) return fail('Could not load the multiplayer library. Check your connection, or explore the map offline.');
+  net = new lib.Network(GAME_ID);
+  let done = false;
+  const timer = setTimeout(() => { if (!done) fail('Lobby server did not respond. Check the code and try again.'); }, 12000);
+  net.on('lobby', c => { done = true; clearTimeout(timer); $('codeBig').textContent = c; $('code').textContent = 'Lobby: ' + c;
+    $('mainForm').style.display = 'none'; $('lobbyBox').style.display = 'flex'; setStatus(''); });
+  net.on('connected', peer => { addPeer(peer.id || peer); sendHello(); });
+  net.on('disconnected', peer => removePeer(peer.id || peer));
   net.on('message', onMessage);
-  net.on('signalingerror', e => setStatus('Signaling error: ' + (e && e.message || e)));
-  let started = false;
-  const go = () => { if (started) return; started = true;
-    const r = mode === 'create' ? net.create({ public: $('chkPublic').checked, codeFormat: 'short' }) : net.join(code);
-    Promise.resolve(r).catch(e => setStatus('Lobby error: ' + (e && e.message || e))); };
-  net.on('ready', go); setTimeout(go, 2000);              // fallback if 'ready' already fired
+  // Netlib requires create()/join() only after 'ready'
+  net.on('ready', () => {
+    const r = mode === 'create' ? net.create({ public: $('chkPublic').checked }) : net.join(code);
+    Promise.resolve(r).catch(e => fail('Lobby error: ' + ((e && e.message) || e)));
+  });
 }
 const sendHello = () => send('reliable', { t: 'hello', name: me.name, k: me.k, d: me.d });
 
@@ -323,7 +345,7 @@ function hitBox(p) {
   return null;
 }
 function movePlayer(dt) {
-  const f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0), s = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+  const f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0) - joy.y, s = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + joy.x;
   const yaw = camera.rotation.y, sp = (keys.ShiftLeft ? 9 : 6) * dt;
   let dx = -Math.sin(yaw) * f + Math.cos(yaw) * s, dz = -Math.cos(yaw) * f - Math.sin(yaw) * s;
   const l = Math.hypot(dx, dz) || 1; dx = dx / l * sp; dz = dz / l * sp;
@@ -366,14 +388,47 @@ addEventListener('mousedown', e => { if (e.button === 0 && controls.isLocked) fi
 addEventListener('mouseup', e => { if (e.button === 0) firing = false; });
 $('pause').onclick = () => controls.lock();
 controls.addEventListener('lock', () => $('pause').style.display = 'none');
-controls.addEventListener('unlock', () => { firing = false; if (playing) $('pause').style.display = 'flex'; });
+controls.addEventListener('unlock', () => { firing = false; if (playing && !touch) $('pause').style.display = 'flex'; });
 
+const touch = matchMedia('(pointer:coarse)').matches;      // phones/tablets get on-screen controls
+const joy = { x: 0, y: 0 };
+const active = () => touch ? playing : controls.isLocked;
+if (touch) document.body.classList.add('touch');
+function deploy() {
+  me.name = ($('inName').value.trim() || me.name).slice(0, 14);
+  $('menu').style.display = 'none'; $('hud').style.display = 'block'; playing = true;
+  camera.rotation.set(0, 0, 0); respawn();
+  if (touch) { document.documentElement.requestFullscreen?.().catch(() => {}); screen.orientation?.lock?.('landscape').catch(() => {}); }
+  else controls.lock();
+}
 $('btnCreate').onclick = () => connect('create');
 $('btnJoin').onclick = () => { const c = $('inCode').value.trim(); if (!c) return setStatus('Enter a lobby code first.'); connect('join', c); };
-$('btnDeploy').onclick = () => {
-  $('menu').style.display = 'none'; $('hud').style.display = 'block'; playing = true;
-  respawn(); controls.lock();
-};
+$('btnSolo').onclick = () => { $('code').textContent = 'Offline'; deploy(); };
+$('btnDeploy').onclick = deploy;
+
+if (touch) {                                                // virtual joystick (left), look-drag (right), action buttons
+  const jz = $('joy'), knob = $('knob'), cv = renderer.domElement; let jid = null, jo, lid = null, lp;
+  const P = { passive: false };
+  jz.addEventListener('touchstart', e => { const t = e.changedTouches[0]; jid = t.identifier; jo = [t.clientX, t.clientY]; e.preventDefault(); }, P);
+  jz.addEventListener('touchmove', e => { for (const t of e.changedTouches) if (t.identifier === jid) {
+    let x = (t.clientX - jo[0]) / 50, y = (t.clientY - jo[1]) / 50; const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
+    joy.x = Math.abs(x) < .15 ? 0 : x; joy.y = Math.abs(y) < .15 ? 0 : y; knob.style.transform = `translate(${x*40}px,${y*40}px)`; } e.preventDefault(); }, P);
+  const jend = e => { for (const t of e.changedTouches) if (t.identifier === jid) { jid = null; joy.x = joy.y = 0; knob.style.transform = ''; } };
+  jz.addEventListener('touchend', jend); jz.addEventListener('touchcancel', jend);
+  cv.addEventListener('touchstart', e => { if (lid === null) { const t = e.changedTouches[0]; lid = t.identifier; lp = [t.clientX, t.clientY]; } }, { passive: true });
+  cv.addEventListener('touchmove', e => { for (const t of e.changedTouches) if (t.identifier === lid) {
+    camera.rotation.y -= (t.clientX - lp[0]) * .006;
+    camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - (t.clientY - lp[1]) * .006, -1.5, 1.5); lp = [t.clientX, t.clientY]; } }, { passive: true });
+  const lend = e => { for (const t of e.changedTouches) if (t.identifier === lid) lid = null; };
+  cv.addEventListener('touchend', lend); cv.addEventListener('touchcancel', lend);
+  const hold = (id, on, off) => { const el = $(id);
+    el.addEventListener('touchstart', e => { on(); e.preventDefault(); }, P);
+    el.addEventListener('touchend', e => { if (off) off(); e.preventDefault(); }, P); };
+  hold('bFire', () => firing = true, () => firing = false);
+  hold('bJump', () => keys.Space = true, () => keys.Space = false);
+  hold('bReload', () => reload(performance.now() / 1000));
+  hold('bBoard', () => { drawBoard(); $('board').style.display = 'table'; }, () => $('board').style.display = 'none');
+}
 
 /* ======================================================================
    MAIN LOOP
@@ -385,7 +440,7 @@ renderer.setAnimationLoop(() => {
   const nowMs = performance.now(), dt = Math.min((nowMs - last) / 1000, .05), now = nowMs / 1000; last = nowMs;
 
   if (playing) {
-    if (controls.isLocked && me.alive) {
+    if (active() && me.alive) {
       movePlayer(dt);
       if (me.reloadAt && now >= me.reloadAt) { me.ammo = MAG; me.reloadAt = 0; }
       if (firing && !me.reloadAt && me.ammo > 0 && now >= me.nextShot) shoot(now);
@@ -409,6 +464,9 @@ renderer.setAnimationLoop(() => {
     if (at !== lastAmmoTxt) { $('ammo').innerHTML = at; lastAmmoTxt = at; }
   }
 
+  // Menu backdrop: slow cinematic orbit around the arena
+  if (!playing) { const a = now * .08; camera.position.set(Math.sin(a) * 52, 16, Math.cos(a) * 52); camera.lookAt(0, 2, 0); }
+
   // Remote player interpolation (smooths out 20 Hz updates)
   peers.forEach(p => { if (!p.seen) return;
     p.g.position.lerp(p.tp, Math.min(1, dt * 14)); p.g.rotation.y = lerpA(p.g.rotation.y, p.ty, Math.min(1, dt * 14)); });
@@ -419,7 +477,7 @@ renderer.setAnimationLoop(() => {
   gun.position.y = -.24 - (me.reloadAt ? .08 : 0);
   flashT -= dt; const on = flashT > 0;
   flash.visible = flashLight.visible = on; if (on) flash.rotation.z = Math.random() * 6;
-  gun.visible = me.alive;
+  gun.visible = playing && me.alive;
 
   renderer.render(scene, camera);
 });
