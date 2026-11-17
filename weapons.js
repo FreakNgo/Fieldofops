@@ -3,7 +3,7 @@ const M=0x4d5c9a,D=0x2b2f45,K=0x1b1d24,Wd=0xb5622a,Gr=0x3d7a4d,Tn=0xb98a52,Sk=0x
 const tx=f=>{const c=document.createElement('canvas');c.width=c.height=64;f(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.magFilter=t.minFilter=THREE.NearestFilter;return t};
 const metal=tx(x=>{x.fillStyle='#e4e4ec';x.fillRect(0,0,64,64);for(let i=0;i<260;i++){x.fillStyle='rgba(0,0,0,'+Math.random()*.2+')';x.fillRect(Math.random()*64,Math.random()*64,1+Math.random()*7,1)}for(let i=0;i<24;i++){x.fillStyle='rgba(255,255,255,.3)';x.fillRect(Math.random()*64,Math.random()*64,7,1)}});
 const wood=tx(x=>{x.fillStyle='#fff';x.fillRect(0,0,64,64);for(let i=0;i<44;i++){x.fillStyle='rgba(60,25,5,'+(.1+Math.random()*.28)+')';x.fillRect(0,Math.random()*64,64,1)}});
-const mat=c=>new THREE.MeshLambertMaterial({color:c,map:c===Wd?wood:metal});
+const MC={},mat=c=>MC[c]||(MC[c]=new THREE.MeshLambertMaterial({color:c,map:c===Wd?wood:metal}));
 const bx=(g,w,h,d,x,y,z,c)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
 const cy=(g,r,l,x,y,z,c)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l,10),mat(c));m.rotation.x=Math.PI/2;m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
 // part: [w,h,d,x,y,z,color,opt] opt: 'c' = cylinder (w=radius,d=length), number = tilt
@@ -17,7 +17,7 @@ glock:{n:'Glock',s:1,dmg:20,rate:220,mag:15,res:60,rl:1400,auto:0,spr:.008,f:400
 knife:{n:'Knife',s:2,dmg:55,rate:450,mag:0,res:0,rl:0,auto:0,spr:0,range:2.8,f:90,p:[[.012,.06,.32,0,.02,-.28,0xd5dbe3],[.01,.03,.07,0,.035,-.47,0xd5dbe3],[.016,.012,.3,0,.055,-.27,0x8a929c],[.04,.07,.015,0,0,-.11,D],[.03,.045,.14,0,-.01,-.03,0x1c1c1c],[.035,.05,.02,0,-.01,.05,M]]}
 };
 for(const k in W)W[k].id=k;
-const GL=THREE.GLTFLoader?new THREE.GLTFLoader():null,MODELS={},LEN={akm:1.05,awm:1.5,mossberg:1.25,mp5:.7,scar:1.2,glock:.32,knife:.5},TINT={scar:0x353a44},HANDS={scar:[[.09,.11,.1,0,-.13,.02,Sk],[.1,.1,.14,0,-.07,-.34,Sk],[.11,.11,.5,.07,-.26,.32,Sl],[.1,.1,.45,-.09,-.2,-.12,Sl]],glock:[[.08,.1,.09,0,-.07,.085,Sk],[.1,.1,.4,.03,-.1,.3,Sl]],knife:[[.08,.08,.11,0,0,.15,Sk],[.1,.1,.4,.03,-.03,.4,Sl]]};
+const GL=THREE.GLTFLoader?new THREE.GLTFLoader():null,MODELS={},LEN={akm:1.05,awm:1.5,mossberg:1.25,mp5:.7,scar:1.2,glock:.32,knife:.5},TINT={scar:0x353a44};
 function fit(root,L,k){root.updateMatrixWorld(true);const pts=[],v=new THREE.Vector3();
 root.traverse(o=>{if(o.isMesh){o.castShadow=true;if(!o.geometry.attributes.normal)o.geometry.computeVertexNormals();const cl=o.material.color,wh=cl&&cl.r>.9&&cl.g>.9&&cl.b>.9&&!o.material.map;o.material=new THREE.MeshLambertMaterial({color:wh?(TINT[k]||0x3a3f4a):(cl||0xffffff),map:o.material.map||null,side:THREE.DoubleSide});const a=o.geometry.attributes.position,st=Math.max(1,a.count/400|0);for(let i=0;i<a.count;i+=st)pts.push(v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld).clone())}});
 const bb=new THREE.Box3().setFromPoints(pts),sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3()),c=new THREE.Vector3();pts.forEach(p=>c.add(p));c.divideScalar(pts.length);
@@ -28,9 +28,21 @@ const piv=new THREE.Group();piv.add(root);root.position.sub(ct);
 const rot=new THREE.Group();rot.add(piv);rot.quaternion.setFromRotationMatrix(basis);rot.scale.setScalar(L/sz[lg]);
 const out=new THREE.Group();out.add(rot);out.position.z=-.05;return out}
 window.loadModels=()=>{if(!GL)return;for(const k in W)GL.load('models/'+k+'.glb',g=>{try{MODELS[k]=fit(g.scene,LEN[k]||1,k);window.onModel&&onModel()}catch(e){console.warn('model',k,e)}},undefined,()=>{})};
-window.buildGun=(id,hand)=>{const g=new THREE.Group();if(MODELS[id]){g.add(MODELS[id].clone());if(hand&&HANDS[id])HANDS[id].forEach(a=>bx(g,...a));return g}
+const GLV=0xb08a5a,SLV=0x56653f;
+// r/l = right/left hand position, w = magazine well (all in gun space)
+const HP={akm:{r:[0,-.14,.17],l:[0,-.07,-.27],w:[0,-.16,-.06]},awm:{r:[0,-.12,.3],l:[0,-.08,-.35],w:[0,-.1,0]},mossberg:{r:[0,-.1,.18],l:[0,-.075,-.3],w:[0,-.06,.1]},mp5:{r:[0,-.15,.12],l:[0,-.085,-.26],w:[0,-.17,-.12]},scar:{r:[0,-.14,.04],l:[0,-.075,-.34],w:[0,-.14,-.06]},glock:{r:[0,-.07,.09],l:[-.015,-.11,.08],w:[0,-.1,.06]},knife:{r:[0,-.012,.17]}};
+function hand(g,pos,side){const h=new THREE.Group();h.position.fromArray(pos);
+bx(h,.075,.05,.1,0,0,0,GLV);
+for(let i=0;i<4;i++)bx(h,.017,.024,.055,-.0275+i*.018,-.03,-.02,GLV);
+bx(h,.02,.022,.06,side*.045,.012,-.03,GLV);
+bx(h,.09,.07,.05,0,-.005,.065,0x2b2f2a);
+const s=bx(h,.1,.09,.5,0,0,0,SLV);s.position.set(side*.05,-.08,.33);s.rotation.set(.5,side*.28,0);
+h.userData.rest=pos.slice();g.add(h);return h}
+function addHands(g,id){const c=HP[id];if(!c)return;hand(g,c.r,1);if(c.l)g.userData.lh=hand(g,c.l,-1);
+if(c.w){g.userData.mw=c.w;const m=bx(g,.05,.17,.08,c.w[0],c.w[1]-.04,c.w[2],0x2b2f45);m.visible=false;g.userData.mag=m}}
+window.buildGun=(id,hand)=>{const g=new THREE.Group();if(MODELS[id]){g.add(MODELS[id].clone());if(hand)addHands(g,id);return g}
 W[id].p.forEach(a=>{const m=a[7]==='c'?cy(g,a[0],a[2],a[3],a[4],a[5],a[6]):bx(g,a[0],a[1],a[2],a[3],a[4],a[5],a[6]);if(typeof a[7]==='number')m.rotation.x=a[7]});
-if(hand){if(id==='knife'){bx(g,.07,.07,.1,0,-.012,-.03,Sk);bx(g,.09,.09,.45,.02,-.05,.25,Sl)}else{bx(g,.1,.1,.14,0,-.075,-.3,Sk);bx(g,.09,.11,.1,0,-.12,.14,Sk);bx(g,.11,.11,.5,.07,-.2,.45,Sl);bx(g,.1,.1,.45,-.05,-.16,-.55,Sl)}}return g};
+if(hand)addHands(g,id);return g};
 window.setGun=(g,id,s,hand)=>{while(g.children.length)g.remove(g.children[0]);const m=buildGun(id,hand);m.scale.setScalar(s||1);if(id==='knife'&&hand){m.rotation.x=.5;m.position.set(.05,-.02,-.05)}g.add(m)};
 window.makeSoldier=col=>{const g=new THREE.Group(),P=0x3a3f33,V=0x2d3036;
 bx(g,.22,.72,.26,-.14,.36,0,P);bx(g,.22,.72,.26,.14,.36,0,P);bx(g,.25,.12,.34,-.14,.06,-.03,D);bx(g,.25,.12,.34,.14,.06,-.03,D);
