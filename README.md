@@ -15,3 +15,6 @@ Upload the folder as a static build (the `api/` folder is ignored; the public fa
 
 ## Controls
 WASD move, Shift run, Run + C slide, C/Ctrl crouch, R reload, 1-3 weapons, RMB zoom. Mobile: joystick (push far = run), drag to aim, on-screen buttons.
+
+## Gun models
+Put .glb files in `models/` (see models/README.txt). They override the built-in procedural guns.

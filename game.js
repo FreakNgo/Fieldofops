@@ -94,12 +94,13 @@ $('#leave').onclick=()=>leave('You left the match.');
 // ---------- combat ----------
 function tracer(a,b){const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color:0xffee88}));S.add(l);setTimeout(()=>{S.remove(l);l.geometry.dispose()},70)}
 const rc=new THREE.Raycaster();rc.far=90;
-const LD={0:'akm',1:'glock',2:'knife'},AM={},TARGET=30,NS=['PRIMARY','PISTOL','MELEE'];let slot=0,rl=0,zoom=false,fresh=false,t0=0,ls=0;
-let wasC=false,RUN=false,rs=0,fs=0;const SL={t:0,x:0,z:0};const cw=()=>W[LD[slot]];
+const LD={0:'scar',1:'glock',2:'knife'},AM={},TARGET=30,NS=['PRIMARY','PISTOL','MELEE'];let slot=0,rl=0,zoom=false,fresh=false,t0=0,ls=0;
+let wasC=false,RUN=false,rs=0,fs=0,CR=false,supp=false,SENS=1;try{SENS=+localStorage.getItem('vs-sens')||(matchMedia('(pointer:coarse)').matches?1.3:1)}catch(e){}const SL={t:0,x:0,z:0};const cw=()=>W[LD[slot]];
 const PT=[],pg=new THREE.BoxGeometry(1,1,1);
 function burst(p,col,n,sp,life,sz){for(let i=0;i<n;i++){const m=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({color:col,transparent:true}));m.scale.setScalar(sz);m.position.copy(p);S.add(m);PT.push({m,v:new THREE.Vector3((Math.random()-.5)*sp,Math.random()*sp,(Math.random()-.5)*sp),l:life,t:life})}}
 function parts(dt){for(let i=PT.length-1;i>=0;i--){const q=PT[i];q.t-=dt;q.v.y-=9*dt;q.m.position.addScaledVector(q.v,dt);q.m.material.opacity=Math.max(0,q.t/q.l);if(q.t<=0){S.remove(q.m);q.m.material.dispose();PT.splice(i,1)}}}
-window.G={K,look(dx,dy){me.w-=dx*.005;me.p=Math.max(-1.5,Math.min(1.5,me.p-dy*.005))},fire(v){down=v;if(v)fresh=true},reload,sw,cyc(){sw((slot+1)%3)},zoom(){zoom=!zoom},pause(){lock=false;$('#pause').style.display='flex'},play(){lock=true;$('#pause').style.display='none'},locked:()=>lock};
+window.G={K,look(dx,dy){me.w-=dx*.005*SENS;me.p=Math.max(-1.5,Math.min(1.5,me.p-dy*.005*SENS))},fire(v){down=v;if(v)fresh=true},reload,sw,cyc(){sw((slot+1)%3)},zoom(){zoom=!zoom},pause(){lock=false;$('#pause').style.display='flex'},play(){lock=true;$('#pause').style.display='none'},locked:()=>lock};
+document.querySelectorAll('.sr').forEach(e=>{e.value=SENS;e.oninput=()=>{SENS=+e.value;try{localStorage.setItem('vs-sens',SENS)}catch(x){}document.querySelectorAll('.sr').forEach(o=>o.value=SENS)}});
 function refill(){for(const k in LD){const w=W[LD[k]];AM[LD[k]]={m:w.mag,r:w.res}}slot=0;rl=0;setGun(gun,LD[0],.85,1);document.querySelectorAll('.sl').forEach((e,i)=>e.textContent=(i+1)+'  '+W[LD[i]].n)}
 function sw(i){if(i===slot||me.dead)return;slot=i;rl=0;setGun(gun,LD[i],.85,1)}
 function reload(){const w=cw(),a=AM[w.id];if(rl||!w.mag||a.m>=w.mag||a.r<=0)return;rl=performance.now()+w.rl;rs=0;beep(180,.06)}
@@ -126,7 +127,7 @@ addEventListener('keydown',e=>{if(!lock)return;if(e.code==='KeyR')reload();const
 addEventListener('mousedown',e=>{if(!lock)return;if(e.button===0)fresh=true;if(e.button===2)zoom=true});
 addEventListener('mouseup',e=>{if(e.button===2)zoom=false});
 // lobby soldier + loadout
-const lob=makeSoldier(0xb5651d);S.add(lob);setGun(lob.userData.hold,LD[0],.8);
+const lob=makeSoldier(0xb5651d);S.add(lob);setGun(lob.userData.hold,LD[0],.8);window.onModel=()=>{setGun(gun,LD[slot],.85,1);setGun(lob.userData.hold,LD[0],.8)};loadModels();
 let lab=null;const setLab=()=>{if(lab)lob.remove(lab);lab=labelSprite(clean($('#name').value)||'Player');lab.position.y=2.15;lob.add(lab)};setLab();$('#name').oninput=setLab;
 function drawLo(){const L=$('#lslots'),G=$('#grid');L.innerHTML='';G.innerHTML='';
 NS.forEach((n,i)=>{const d=document.createElement('div');d.className='ls'+(i===ls?' on':'');d.innerHTML='<small>'+n+'</small><img src="'+thumb(LD[i])+'">';d.onclick=()=>{ls=i;drawLo()};L.appendChild(d)});
@@ -136,7 +137,7 @@ d.onclick=()=>{LD[ls]=k;if(!ls)setGun(lob.userData.hold,k,.8);drawLo()};G.append
 $('#lbtn').onclick=()=>{$('#lo').style.display='flex';drawLo()};$('#lok').onclick=()=>$('#lo').style.display='none';
 
 // ---------- input ----------
-addEventListener('mousemove',e=>{if(!lock)return;me.w-=e.movementX*.0022;me.p=Math.max(-1.5,Math.min(1.5,me.p-e.movementY*.0022))});
+addEventListener('mousemove',e=>{if(!lock)return;me.w-=e.movementX*.0022*SENS;me.p=Math.max(-1.5,Math.min(1.5,me.p-e.movementY*.0022*SENS))});
 addEventListener('mousedown',e=>{if(lock&&e.button===0)down=true});addEventListener('mouseup',()=>down=false);
 addEventListener('keydown',e=>{K[e.code]=true;if(lock&&['Space','ArrowUp','ArrowDown','Tab'].includes(e.code))e.preventDefault()});
 addEventListener('keyup',e=>K[e.code]=false);
@@ -147,11 +148,11 @@ addEventListener('resize',()=>{R.setSize(innerWidth,innerHeight);C.aspect=innerW
 
 // ---------- loop ----------
 function update(dt,t){
-const f=(K.KeyW?1:0)-(K.KeyS?1:0)+JS.y,s=(K.KeyD?1:0)-(K.KeyA?1:0)+JS.x,l=Math.max(1,Math.hypot(f,s)),sp=((K.ControlLeft||K.KeyC)?3.5:K.ShiftLeft?10:7)*dt;
+const f=(K.KeyW?1:0)-(K.KeyS?1:0)+JS.y,s=(K.KeyD?1:0)-(K.KeyA?1:0)+JS.x,l=Math.max(1,Math.hypot(f,s)),sp=(CR?3.5:K.ShiftLeft?10:7)*dt;
 const mvx=(-Math.sin(me.w)*f+Math.cos(me.w)*s)/l,mvz=(-Math.cos(me.w)*f-Math.sin(me.w)*s)/l,moving=Math.hypot(f,s)>.1,cr=K.ControlLeft||K.KeyC,run=!!K.ShiftLeft&&f>.1;
 RUN=lock&&run&&me.g&&!me.dead&&!SL.t;
-if(cr&&!wasC&&me.g&&run&&!SL.t&&lock&&!me.dead){SL.t=.85;SL.x=mvx;SL.z=mvz;beep(90,.35)}
-wasC=cr;
+if(cr&&!wasC&&me.g&&run&&!SL.t&&lock&&!me.dead){SL.t=.85;SL.x=mvx;SL.z=mvz;beep(90,.35);supp=true;if(window.G&&G.touch)K.KeyC=false}
+if(!cr)supp=false;CR=cr&&!supp;wasC=cr;
 if(lock&&me.g&&moving&&!SL.t&&performance.now()>fs){fs=performance.now()+(RUN?260:380);beep(70+Math.random()*20,.05)}
 if(lock&&!me.dead){
 if(SL.t>0){const k=SL.t/.85;me.x+=SL.x*(4+10*k*k)*dt;me.z+=SL.z*(4+10*k*k)*dt;SL.t-=dt;if(SL.t<=0||(K.Space&&me.g))SL.t=0;if(Math.random()<.5)burst(new THREE.Vector3(me.x,.1,me.z),0xb9ac98,1,2.5,.5,.09)}
@@ -159,7 +160,7 @@ else{me.x+=mvx*sp;me.z+=mvz*sp}
 if(K.Space&&me.g){me.vy=8.5;me.g=false}if(down)shoot()}
 const py=me.y;me.vy-=24*dt;me.y+=me.vy*dt;collide(py);
 me.x=Math.max(-49.4,Math.min(49.4,me.x));me.z=Math.max(-49.4,Math.min(49.4,me.z));
-const ct=me.dead?.4:SL.t>0?.7:(K.ControlLeft||K.KeyC)?1.0:1.6;me.ch+=(ct-me.ch)*Math.min(1,dt*14);C.position.set(me.x,me.y+me.ch+(lock&&me.g&&moving&&!SL.t?Math.sin(performance.now()*(RUN?.014:.01))*(RUN?.045:.018):0),me.z);C.rotation.set(me.p,me.w,0,'YXZ');
+const ct=me.dead?.4:SL.t>0?.7:CR?1.0:1.6;me.ch+=(ct-me.ch)*Math.min(1,dt*14);C.position.set(me.x,me.y+me.ch+(lock&&me.g&&moving&&!SL.t?Math.sin(performance.now()*(RUN?.014:.01))*(RUN?.045:.018):0),me.z);C.rotation.set(me.p,me.w,0,'YXZ');
 gun.position.z+=(-.65-gun.position.z)*Math.min(1,dt*15);gun.rotation.x*=Math.max(0,1-dt*14);gun.visible=!me.dead&&!zoom;gun.position.y=-.3+((lock&&me.g&&moving&&!SL.t)?Math.sin(performance.now()*(RUN?.014:.011))*(RUN?.03:.012):0);gun.rotation.y+=((RUN?.4:SL.t>0?.25:.12)-gun.rotation.y)*Math.min(1,dt*8);hud(dt);
 const now=performance.now(),a=Math.min(1,dt*14);
 for(const id in pl){const o=pl[id];if(now-o.seen>4000){rm(id);continue}const m=o.m;

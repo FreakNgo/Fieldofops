@@ -53,7 +53,7 @@ button.alt{background:transparent;border:1px solid #34457d;color:#9fb0e0;margin-
 #board div{display:flex;justify-content:space-between;gap:16px;padding:2px 0}#board h4{font-size:11px;color:#9fb0e0;margin-bottom:4px}
 #feed{position:absolute;left:14px;top:14px;font-size:15px;color:#ffc83a;text-shadow:0 1px 3px #000}
 #feed div{margin-bottom:4px;padding:3px 8px;background:rgba(0,0,0,.4);width:fit-content}
-#rlb{display:none;position:absolute;left:50%;top:calc(50% + 34px);width:96px;height:6px;margin-left:-48px;background:rgba(0,0,0,.55);border:1px solid #fff}#rlb b{display:block;height:100%;background:#ffd24a}#vig{position:absolute;inset:0;background:radial-gradient(transparent 55%,rgba(0,0,0,.4))}#dmg{position:absolute;inset:0;background:radial-gradient(transparent 40%,rgba(255,0,0,.65));opacity:0;transition:opacity .25s}
+#rlb{display:none;position:absolute;left:50%;top:calc(50% + 34px);width:96px;height:6px;margin-left:-48px;background:rgba(0,0,0,.55);border:1px solid #fff}#rlb b{display:block;height:100%;background:#ffd24a}.sens{display:block;margin:0 20px 10px;color:#dbe6ff;font:700 12px "Trebuchet MS",sans-serif;text-align:left;letter-spacing:1px}.sens input{width:100%;accent-color:#35d4ee;margin-top:6px}.card .sens{margin:0 0 14px}#vig{position:absolute;inset:0;background:radial-gradient(transparent 55%,rgba(0,0,0,.4))}#dmg{position:absolute;inset:0;background:radial-gradient(transparent 40%,rgba(255,0,0,.65));opacity:0;transition:opacity .25s}
 #scope{display:none;position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 28vh,#000 28.3vh)}
 #scope:before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#000}#scope:after{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:#000}
 #death{display:none;position:absolute;left:0;right:0;top:36%;text-align:center;font-size:44px;font-weight:900;font-style:italic;color:#ff5a45;text-shadow:3px 3px 0 #000}
@@ -62,12 +62,12 @@ button.alt{background:transparent;border:1px solid #34457d;color:#9fb0e0;margin-
 <div id="menu" class="ov">
 <h1 id="logo">VORTEX STRIKE</h1>
 <input id="name" maxlength="14" placeholder="Nickname" autocomplete="off">
-<div id="side"><div id="status"></div><button id="lbtn">SELECT LOADOUT</button><button id="find">PLAY</button></div>
+<div id="side"><label class="sens">SENSITIVITY<input class="sr" type="range" min="0.3" max="3" step="0.05" value="1"></label><div id="status"></div><button id="lbtn">SELECT LOADOUT</button><button id="find">PLAY</button></div>
 </div>
 <div id="lo" class="ov"><div id="lslots"></div><div id="lright"><h1 style="font-size:26px;margin-bottom:14px;text-shadow:none;color:#fff">SELECT WEAPON</h1><div id="grid"></div><button id="lok">USE LOADOUT</button></div></div>
 <div id="pause" class="ov"><div class="card">
 <h1>READY?</h1><p class="sub" id="room"></p>
-<p class="sub" style="font-size:12px">WASD move · Shift run · Run + C slide · C / Ctrl crouch · R reload · 1-3 weapons · RMB zoom</p><button id="play">CLICK TO PLAY</button>
+<p class="sub" style="font-size:12px">WASD move · Shift run · Run + C slide · C / Ctrl crouch · R reload · 1-3 weapons · RMB zoom</p><label class="sens">SENSITIVITY<input class="sr" type="range" min="0.3" max="3" step="0.05" value="1"></label><button id="play">CLICK TO PLAY</button>
 <button id="leave" class="alt">Leave match</button>
 </div></div>
 <div id="hud">
@@ -80,6 +80,7 @@ button.alt{background:transparent;border:1px solid #34457d;color:#9fb0e0;margin-
 </div>
 <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
 <script src="libs/three.min.js"></script>
+<script src="libs/GLTFLoader.js"></script>
 <script src="libs/peerjs.min.js"></script>
 <script src="weapons.js"></script>
 <script src="map.js"></script>
