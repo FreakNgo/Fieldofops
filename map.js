@@ -16,6 +16,8 @@ x.strokeStyle='rgba(15,15,20,.6)';x.beginPath();x.moveTo(rnd()*128,0);for(let i=
 const win=cv(64,64,x=>{x.fillStyle='#d6cfbd';x.fillRect(0,0,64,64);x.fillStyle='#46556b';for(let i=0;i<2;i++)for(let j=0;j<4;j++)x.fillRect(4+j*16,8+i*28,10,18);x.fillStyle='rgba(0,0,0,.15)';x.fillRect(0,60,64,4)},13);
 const barT=cv(64,32,x=>{x.fillStyle='#a3a8ae';x.fillRect(0,0,64,32);x.fillStyle='#e8c21a';for(let i=-2;i<6;i++){x.beginPath();x.moveTo(i*12,32);x.lineTo(i*12+8,32);x.lineTo(i*12+24,12);x.lineTo(i*12+16,12);x.fill()}for(let i=0;i<40;i++){x.fillStyle='rgba(0,0,0,'+rnd()*.15+')';x.fillRect(rnd()*64,rnd()*32,4,1)}});
 const brlT=cv(64,64,x=>{x.fillStyle='#b23a2b';x.fillRect(0,0,64,64);x.fillStyle='rgba(0,0,0,.35)';[8,30,52].forEach(y=>x.fillRect(0,y,64,4));for(let i=0;i<4;i++){x.fillStyle='rgba(255,255,255,.12)';x.fillRect(i*16+2,0,3,64)}});
+const dump=cv(64,32,x=>{x.fillStyle='#2e6b45';x.fillRect(0,0,64,32);x.fillStyle='rgba(0,0,0,.3)';x.fillRect(0,0,64,5);x.fillRect(0,26,64,6);for(let i=0;i<30;i++){x.fillStyle='rgba(255,255,255,'+rnd()*.08+')';x.fillRect(rnd()*64,rnd()*32,6,1)}});
+const mark=cv(128,16,x=>{x.fillStyle='#e8c21a';x.fillRect(8,6,56,4)},16);
 const sky=cv(8,256,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#4f7fc4');g.addColorStop(.45,'#9ab8dc');g.addColorStop(.52,'#f4c08e');g.addColorStop(1,'#d98f6a');x.fillStyle=g;x.fillRect(0,0,w,h)});
 sky.magFilter=sky.minFilter=THREE.LinearFilter;
 window.buildMap=(add,S,rng)=>{
@@ -28,12 +30,17 @@ const bar=new THREE.MeshLambertMaterial({map:barT}),brl=new THREE.MeshLambertMat
 [[0,-49.9,0],[0,49.9,Math.PI],[-49.9,0,Math.PI/2],[49.9,0,-Math.PI/2]].forEach(a=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(100,8),wm);p.position.set(a[0],4,a[1]);p.rotation.y=a[2];S.add(p)});
 for(let gx=-3;gx<=3;gx++)for(let gz=-3;gz<=3;gz++){if(Math.abs(gx)<=1&&Math.abs(gz)<=1&&(gx===0||gz===0)){if(gx||gz){const x=gx*13,z=gz*13;add(x+2.5,z+2,3,1,.8,bar);add(x-2.5,z-2,2.2,2.2,2.2,cm);add(x+3,z-3,1.6,1.2,1.6,cm);add(x-3,z+3,.9,1.1,.9,brl);add(x-4,z+3.2,.9,1.1,.9,brl)}continue}if(rng()<.12)continue;
 const x=gx*13+(rng()-.5)*3,z=gz*13+(rng()-.5)*3,a=rng()<.5,n=1+(rng()*2.2|0),m=M(rng()*5|0,n);
-add(x,z,a?11:2.6,2.6*n,a?2.6:11,m);if(n===1&&rng()<.6)add(x+(a?0:3.2),z+(a?3.2:0),1.6,1.2,1.6,cm)}
+add(x,z,a?11:2.6,2.6*n,a?2.6:11,m);if(n===1&&rng()<.6)add(x+(a?0:3.2),z+(a?3.2:0),1.6,1.2,1.6,cm);else if(n===2&&rng()<.55)for(let k=0;k<5;k++){const o=(k-2)*1.3;add(a?x+o:x+2.3,a?z+2.3:z+o,a?1.3:2,1.04*(k+1),a?2:1.3,0x8a8f96)}}
 [[-5,4],[5,-4],[-4,-6],[6,5]].forEach(a=>add(a[0],a[1],3,1,.8,bar));
 [[-4,-3],[7,2],[-8,6]].forEach(a=>{add(a[0],a[1],2.2,.6,1.4,am);add(a[0]+.2,a[1],1.6,1.1,1.1,am)});
 [[-9,-9],[9,9]].forEach(a=>{add(a[0],a[1],.5,12,.5,0x2c2f35);const l=new THREE.Mesh(new THREE.BoxGeometry(2.2,.4,1),new THREE.MeshBasicMaterial({color:0xfff1c4}));l.position.set(a[0],12.2,a[1]);S.add(l)});
 [[-46,-46],[46,-46],[-46,46],[46,46]].forEach(a=>add(a[0],a[1],1.6,14,1.6,st));
 [-46,46].forEach(z=>{const b=new THREE.Mesh(new THREE.BoxGeometry(92,1.2,1.2),st);b.position.set(0,14.5,z);b.castShadow=true;S.add(b)});
 const hc=new THREE.Mesh(new THREE.BoxGeometry(11,2.6,2.6),M(3,1));hc.position.set(-6,10,-46);hc.castShadow=true;S.add(hc);
-[-9,-3].forEach(x=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.06,3,.06),st);c.position.set(x,12.4,-46);S.add(c)})};
+[-9,-3].forEach(x=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.06,3,.06),st);c.position.set(x,12.4,-46);S.add(c)});
+const dmM=new THREE.MeshLambertMaterial({map:dump}),mm=new THREE.MeshBasicMaterial({map:mark,transparent:true,depthWrite:false});
+[0,1].forEach(i=>{const g=new THREE.Group(),p=new THREE.Mesh(new THREE.PlaneGeometry(98,.5),mm);p.rotation.x=-Math.PI/2;p.position.y=.03;g.add(p);g.rotation.y=i*Math.PI/2;S.add(g)});
+[[9,-1],[-9,1],[1,9],[-1,-9]].forEach(a=>add(a[0],a[1],2.2,1.4,1.1,dmM));
+[[6,-8],[-7,8],[10,7],[-10,-6]].forEach(a=>add(a[0],a[1],1.1,1.2,1.1,0x202328));
+[[-9,9],[9,-9]].forEach(a=>{add(a[0],a[1],.5,12,.5,0x2c2f35);const l=new THREE.Mesh(new THREE.BoxGeometry(2.2,.4,1),new THREE.MeshBasicMaterial({color:0xfff1c4}));l.position.set(a[0],12.2,a[1]);S.add(l)})};
 })();
